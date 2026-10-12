@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { tokenizeLines } from "../src/tokenizer/tokenizeLines";
 import type { IsaSpec } from "../src/tokenizer/types";
 import { kinds } from "./helpers";
+import { ALL_ISAS } from "../src/isa";
 
 const T: IsaSpec = {
   id: "t",
@@ -66,4 +67,18 @@ describe("parser core", () => {
     for (const ch of all) expect(() => tokenizeLines(`mov ${ch}${ch} r0`, T)).not.toThrow();
     expect(() => tokenizeLines("é→ 漢字 mov r0", T)).not.toThrow();
   });
+});
+
+describe("lossless round-trip", () => {
+  const samples: Record<string, string> = {
+    riscv: "start:\taddi\ta0, a0, 1 # héllo λ\n.string \"unterminated\n/* block\n comment */ ret\n",
+    arm32: "loop:\tmov r0, #1 @ ünï\n\t.asciz \"abc\n/* b\nc */\tbx lr\n",
+    arm64: "_main:\n\tmov x0, #0x10 // żółć\n\t.ascii \"oops\n/* x\n y */ ret",
+  };
+  for (const isa of ALL_ISAS) {
+    it(`${isa.id}`, () => {
+      const src = samples[isa.id];
+      expect(tokenizeLines(src, isa).map((l) => l.map((t) => t.text).join("")).join("\n")).toBe(src);
+    });
+  }
 });

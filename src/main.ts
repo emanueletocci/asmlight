@@ -1,17 +1,15 @@
 import { loadPrism, MarkdownView, Plugin } from "obsidian";
-import { toCm5Mode } from "./adapters/cm5";
+import { registerCm5Modes, unregisterCm5Modes } from "./adapters/cm5";
 import { highlightCodeElement, isaForCodeElement } from "./adapters/reading";
 import { ALL_ISAS, isaForTag } from "./isa";
 
 type PrismEnv = { element: HTMLElement; language: string };
 
 export default class AsmlighPlugin extends Plugin {
-  private readonly tags = ALL_ISAS.flatMap((isa) => [isa.id, ...isa.aliases]);
+  private unloaded = false;
 
   // Prism replaces the contents of code blocks whose language it doesn't know.
   // If it runs after our post-processor, this puts the highlighting back.
-  private unloaded = false;
-
   private readonly prismHook = (env: PrismEnv) => {
     if (this.unloaded) return;
     const isa = isaForTag(env.language ?? "");
@@ -19,10 +17,9 @@ export default class AsmlighPlugin extends Plugin {
   };
 
   async onload() {
-    const CM = (window as any).CodeMirror;
-    for (const isa of ALL_ISAS) {
-      for (const tag of [isa.id, ...isa.aliases]) CM?.defineMode?.(tag, () => toCm5Mode(isa));
-    }
+    registerCm5Modes((window as any).CodeMirror, ALL_ISAS);
+    // Editor highlighting must not depend on Prism loading.
+    this.app.workspace.updateOptions();
 
     this.registerMarkdownPostProcessor((el) => {
       if (this.unloaded) return;
@@ -49,8 +46,7 @@ export default class AsmlighPlugin extends Plugin {
 
   onunload() {
     this.unloaded = true;
-    const CM = (window as any).CodeMirror;
-    for (const tag of this.tags) delete CM?.modes?.[tag];
+    unregisterCm5Modes((window as any).CodeMirror, ALL_ISAS);
 
     const hooks: unknown[] | undefined = (window as any).Prism?.hooks?.all?.["after-highlight"];
     const i = hooks?.indexOf(this.prismHook) ?? -1;
@@ -58,11 +54,6 @@ export default class AsmlighPlugin extends Plugin {
 
     this.app.workspace.updateOptions();
     // Deferred so Obsidian has removed the post-processor before views re-render.
-    const workspace = this.app.workspace;
-    window.setTimeout(() => {
-      for (const leaf of workspace.getLeavesOfType("markdown")) {
-        if (leaf.view instanceof MarkdownView) leaf.view.previewMode.rerender(true);
-      }
-    }, 0);
+    window.setTimeout(() => this.rerenderReadingViews(), 0);
   }
 }
