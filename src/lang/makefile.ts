@@ -1,3 +1,4 @@
+import { describeMake } from "../docs/make";
 import { words } from "../isa/common";
 import type { Language, Parser, Stream, TokenKind } from "../tokenizer/types";
 
@@ -154,4 +155,5 @@ export const MAKEFILE: Language = {
   aliases: ["make", "mk", "mak"],
   makeParser: makeMakefileParser,
   lineComment: "#",
+  describe: describeMake,
 };

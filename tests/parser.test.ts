@@ -78,6 +78,7 @@ describe("lossless round-trip", () => {
     arm64: "_main:\n\tmov x0, #0x10 // żółć\n\t.ascii \"oops\n/* x\n y */ ret",
     makefile: "CC := gcc # ç\nall: $(OBJ) \\\n\tmain.o\n\t@echo \"oops\n\techo 'x\ndefine X =\n$(Y\nendef\n",
     linker: "MEMORY { FLASH (rx) : ORIGIN = 0x0, LENGTH = 64K }\n/* ü\n x */ .text : { *(.text*) } > FLASH\n\"oops",
+    dts: "/dts-v1/;\n/ { ü: n@1 { reg = <0x0\n 1>; s = \"oops\n}; /* c\n */ };\nb = [00 1",
   };
   for (const lang of ALL_LANGUAGES) {
     it(`${lang.id}`, () => {

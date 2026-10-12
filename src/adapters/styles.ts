@@ -9,12 +9,12 @@ import type { TokenKind } from "../tokenizer/types";
 export const CM_STYLE: Record<TokenKind, string> = {
   comment: "comment", label: "type", mnemonic: "keyword", directive: "operator",
   register: "variable-2", number: "number", string: "string", reloc: "builtin",
-  keyword: "keyword", function: "builtin", variable: "variable-2", operator: "operator",
+  keyword: "keyword", function: "builtin", variable: "variable-2", operator: "operator", property: "property",
 };
 
 /** Prism token classes; Obsidian themes color `.token.<name>` in Reading view. */
 export const PRISM_CLASS: Record<TokenKind, string> = {
   comment: "comment", label: "function", mnemonic: "keyword", directive: "tag",
   register: "variable", number: "number", string: "string", reloc: "builtin",
-  keyword: "keyword", function: "builtin", variable: "variable", operator: "operator",
+  keyword: "keyword", function: "builtin", variable: "variable", operator: "operator", property: "property",
 };

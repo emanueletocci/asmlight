@@ -1,7 +1,8 @@
+import { CSR_NAMES, describeRiscv } from "../docs/riscv";
 import type { IsaSpec } from "../tokenizer/types";
 import { range, words } from "./common";
 
-const MNEMONICS = new Set(words(`
+export const MNEMONICS = new Set(words(`
   lui auipc jal jalr beq bne blt bge bltu bgeu lb lh lw lbu lhu sb sh sw
   addi slti sltiu xori ori andi slli srli srai add sub sll slt sltu xor srl sra or and
   fence ecall ebreak
@@ -20,7 +21,7 @@ const MNEMONICS = new Set(words(`
 `));
 
 /** Bases that only appear with a `.suffix` (fadd.s, lr.w, c.addi, vadd.vv, sext.w ...). */
-const DOTTED_BASES = new Set(words(`
+export const DOTTED_BASES = new Set(words(`
   lr sc amoswap amoadd amoxor amoand amoor amomin amomax amominu amomaxu
   fadd fsub fmul fdiv fsqrt fmin fmax fmadd fmsub fnmadd fnmsub fcvt fmv fsgnj fsgnjn fsgnjx
   feq flt fle fclass fneg fabs fli
@@ -32,11 +33,12 @@ const DOTTED_BASES = new Set(words(`
   vfadd vfsub vfmul vfdiv vfmacc vfmin vfmax vfmv vfcvt vfredosum vfredusum
 `));
 
-const REGISTERS: ReadonlySet<string> = new Set([
+export const REGISTERS: ReadonlySet<string> = new Set([
   ...range("x", 0, 31), ...range("f", 0, 31), ...range("v", 0, 31),
   "zero", "ra", "sp", "gp", "tp", "fp",
   ...range("t", 0, 6), ...range("s", 0, 11), ...range("a", 0, 7),
   ...range("ft", 0, 11), ...range("fs", 0, 11), ...range("fa", 0, 7),
+  ...CSR_NAMES,
 ]);
 
 export function isRiscvMnemonic(word: string): boolean {
@@ -53,4 +55,5 @@ export const RISCV: IsaSpec = {
   registers: REGISTERS,
   lineComments: ["#", "//"],
   hashIsImmediate: false,
+  describe: describeRiscv,
 };

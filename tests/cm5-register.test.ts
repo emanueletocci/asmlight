@@ -29,9 +29,9 @@ describe("registerCm5Modes", () => {
         expect(CM.modes[tag]).toBeTypeOf("function");
         expect(CM.findModeByName(tag.toUpperCase())?.mode).toBe(lang.id);
       }
-      expect(CM.mimeModes[`text/x-asmligh-${lang.id}`]).toBe(lang.id);
+      expect(CM.mimeModes[`text/x-asmlight-${lang.id}`]).toBe(lang.id);
     }
-    expect(CM.findModeByName("RISCV").mime).toBe("text/x-asmligh-riscv");
+    expect(CM.findModeByName("RISCV").mime).toBe("text/x-asmlight-riscv");
   });
 
   it("does not override names already claimed by another modeInfo entry", () => {
