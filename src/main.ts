@@ -36,6 +36,9 @@ export default class AsmlightPlugin extends Plugin {
     registerCm5Modes((window as any).CodeMirror, ALL_LANGUAGES);
     // Editor highlighting must not depend on Prism loading.
     this.app.workspace.updateOptions();
+    this.app.workspace.onLayoutReady(() => {
+      if (!this.unloaded) this.rebuildEditors();
+    });
 
     this.registerMarkdownPostProcessor((el) => {
       if (this.unloaded) return;
@@ -78,6 +81,21 @@ export default class AsmlightPlugin extends Plugin {
     }
   }
 
+  /**
+   * Live Preview and Source mode cache each code block's parse, including which
+   * mode a fence resolved to. Notes already open when the plugin loads (every
+   * restored tab at startup) parsed our fences as plain text, and updateOptions()
+   * keeps that cache, so reopen those editors to parse them again.
+   */
+  private rebuildEditors() {
+    for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+      if (leaf.view instanceof MarkdownView && leaf.view.getMode() === "source") {
+        // Not in the public typings; reopens the file keeping scroll and cursor.
+        void (leaf as unknown as { rebuildView?: () => Promise<void> }).rebuildView?.();
+      }
+    }
+  }
+
   onunload() {
     this.unloaded = true;
     for (const h of this.hovers.splice(0)) h.destroy();
@@ -89,6 +107,9 @@ export default class AsmlightPlugin extends Plugin {
 
     this.app.workspace.updateOptions();
     // Deferred so Obsidian has removed the post-processor before views re-render.
-    window.setTimeout(() => this.rerenderReadingViews(), 0);
+    window.setTimeout(() => {
+      this.rerenderReadingViews();
+      this.rebuildEditors();
+    }, 0);
   }
 }
