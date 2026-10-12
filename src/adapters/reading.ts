@@ -1,19 +1,19 @@
-import { isaForTag } from "../isa";
+import { languageForTag } from "../languages";
 import { tokenizeLines } from "../tokenizer/tokenizeLines";
-import type { IsaSpec } from "../tokenizer/types";
+import type { Language } from "../tokenizer/types";
 import { PRISM_CLASS } from "./styles";
 
-export function isaForCodeElement(code: HTMLElement): IsaSpec | undefined {
+export function languageForCodeElement(code: HTMLElement): Language | undefined {
   for (const cls of Array.from(code.classList)) {
-    if (cls.startsWith("language-")) return isaForTag(cls.slice("language-".length));
+    if (cls.startsWith("language-")) return languageForTag(cls.slice("language-".length));
   }
   return undefined;
 }
 
 /** Idempotent: always rebuilds from textContent, so re-running (or running after Prism) is safe. */
-export function highlightCodeElement(code: HTMLElement, isa: IsaSpec): void {
+export function highlightCodeElement(code: HTMLElement, lang: Language): void {
   const frag = document.createDocumentFragment();
-  tokenizeLines(code.textContent ?? "", isa).forEach((tokens, i) => {
+  tokenizeLines(code.textContent ?? "", lang).forEach((tokens, i) => {
     if (i > 0) frag.append("\n");
     for (const t of tokens) {
       if (!t.kind) { frag.append(t.text); continue; }

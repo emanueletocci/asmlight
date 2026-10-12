@@ -1,12 +1,11 @@
 import { StringStream } from "@codemirror/language";
-import { makeParser } from "./parser";
-import type { IsaSpec, TokenKind } from "./types";
+import type { Language, TokenKind } from "./types";
 
 export function tokenizeLines(
   text: string,
-  isa: IsaSpec,
+  lang: Language,
 ): Array<Array<{ text: string; kind: TokenKind | null }>> {
-  const parser = makeParser(isa);
+  const parser = lang.makeParser();
   const state = parser.startState();
   return text.split("\n").map((line) => {
     const tokens: Array<{ text: string; kind: TokenKind | null }> = [];
