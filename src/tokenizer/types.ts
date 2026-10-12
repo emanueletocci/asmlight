@@ -16,6 +16,7 @@ export interface HoverDoc {
 /** A fence language: its tags, comment syntax and a stream tokenizer. */
 export interface Language {
   id: string;
+  name: string;                          // shown in Obsidian's code block language label
   aliases: string[];
   makeParser(): Parser<any>;
   lineComment?: string;
@@ -26,6 +27,7 @@ export interface Language {
 
 export interface IsaSpec {
   id: string;
+  name: string;
   aliases: string[];
   isMnemonic(word: string): boolean;     // word is lowercase
   registers: ReadonlySet<string>;        // lowercase

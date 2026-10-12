@@ -27,7 +27,6 @@ export interface Cm5Like {
 }
 
 const mimeFor = (lang: Language) => `text/x-asmlight-${lang.id}`;
-const infoName = (lang: Language) => `Asmlight ${lang.id}`;
 
 /** Registers modes under every tag, plus modeInfo so findModeByName resolves any case. */
 export function registerCm5Modes(CM: Cm5Like | undefined, langs: readonly Language[]): void {
@@ -43,8 +42,10 @@ export function registerCm5Modes(CM: Cm5Like | undefined, langs: readonly Langua
         for (const a of m.alias ?? []) taken.add(a.toLowerCase());
       }
       const free = tags.filter((t) => !taken.has(t.toLowerCase()));
-      if (free.length && !taken.has(infoName(lang).toLowerCase())) {
-        CM.modeInfo.push({ name: infoName(lang), mime: mimeFor(lang), mode: lang.id, alias: free });
+      // Obsidian shows this name as the code block's language label.
+      const name = taken.has(lang.name.toLowerCase()) ? `${lang.name} (Asmlight)` : lang.name;
+      if (free.length && !taken.has(name.toLowerCase())) {
+        CM.modeInfo.push({ name, mime: mimeFor(lang), mode: lang.id, alias: free });
       }
     }
   }
@@ -57,7 +58,7 @@ export function unregisterCm5Modes(CM: Cm5Like | undefined, langs: readonly Lang
     delete CM.mimeModes?.[mimeFor(lang)];
     if (Array.isArray(CM.modeInfo)) {
       for (let i = CM.modeInfo.length - 1; i >= 0; i--) {
-        if (CM.modeInfo[i].name === infoName(lang) && CM.modeInfo[i].mime === mimeFor(lang)) CM.modeInfo.splice(i, 1);
+        if (CM.modeInfo[i].mime === mimeFor(lang) && CM.modeInfo[i].mode === lang.id) CM.modeInfo.splice(i, 1);
       }
     }
   }

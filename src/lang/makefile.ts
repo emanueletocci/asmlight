@@ -152,6 +152,7 @@ export function makeMakefileParser(): Parser<MakeState> {
 
 export const MAKEFILE: Language = {
   id: "makefile",
+  name: "Makefile",
   aliases: ["make", "mk", "mak"],
   makeParser: makeMakefileParser,
   lineComment: "#",

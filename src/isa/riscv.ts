@@ -50,6 +50,7 @@ export function isRiscvMnemonic(word: string): boolean {
 
 export const RISCV: IsaSpec = {
   id: "riscv",
+  name: "RISC-V",
   aliases: ["risc-v", "rv", "rv32", "rv64"],
   isMnemonic: isRiscvMnemonic,
   registers: REGISTERS,

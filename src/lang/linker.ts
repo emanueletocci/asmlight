@@ -85,6 +85,7 @@ export function makeLinkerParser(): Parser<LdState> {
 
 export const LINKER: Language = {
   id: "linker",
+  name: "Linker script",
   aliases: ["ld", "lds", "linkerscript", "linker-script"],
   makeParser: makeLinkerParser,
   blockComment: ["/*", "*/"],

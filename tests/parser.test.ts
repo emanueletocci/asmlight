@@ -7,6 +7,7 @@ import { asmLanguage } from "../src/tokenizer/parser";
 
 const T_ISA: IsaSpec = {
   id: "t",
+  name: "T",
   aliases: [],
   isMnemonic: (w) => w === "mov" || w === "nop",
   registers: new Set(["r0", "r1"]),

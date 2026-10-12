@@ -32,6 +32,10 @@ describe("registerCm5Modes", () => {
       expect(CM.mimeModes[`text/x-asmlight-${lang.id}`]).toBe(lang.id);
     }
     expect(CM.findModeByName("RISCV").mime).toBe("text/x-asmlight-riscv");
+    // Obsidian's code block label shows the entry's name
+    expect(CM.findModeByName("rv64").name).toBe("RISC-V");
+    expect(CM.findModeByName("ld").name).toBe("Linker script");
+    expect(CM.findModeByName("mk").name).toBe("Makefile");
   });
 
   it("does not override names already claimed by another modeInfo entry", () => {
@@ -40,7 +44,17 @@ describe("registerCm5Modes", () => {
     registerCm5Modes(CM, ALL_LANGUAGES);
     expect(CM.findModeByName("arm")).toBe(other);
     expect(CM.findModeByName("arm32").mode).toBe("arm32");
+    expect(CM.findModeByName("arm32").name).toBe("ARM (Asmlight)");
     expect(other.alias).toEqual(["ARM"]);
+  });
+
+  it("falls back to a suffixed label when the display name is taken", () => {
+    const other = { name: "Makefile", mime: "text/x-other-make", mode: "othermake", alias: ["gnumake"] };
+    const CM = fakeCM([other]);
+    registerCm5Modes(CM, ALL_LANGUAGES);
+    expect(CM.findModeByName("mk").name).toBe("Makefile (Asmlight)");
+    unregisterCm5Modes(CM, ALL_LANGUAGES);
+    expect(CM.modeInfo).toEqual([other]);
   });
 
   it("works without modeInfo or CM", () => {
