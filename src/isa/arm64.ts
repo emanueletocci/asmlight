@@ -35,6 +35,7 @@ export function isArm64Mnemonic(word: string): boolean {
 
 export const ARM64: IsaSpec = {
   id: "arm64",
+  name: "AArch64",
   aliases: ["aarch64", "a64"],
   isMnemonic: isArm64Mnemonic,
   registers: REGISTERS,

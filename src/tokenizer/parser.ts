@@ -54,6 +54,7 @@ export function makeParser(isa: IsaSpec): AsmParser {
 export function asmLanguage(isa: IsaSpec): Language {
   return {
     id: isa.id,
+    name: isa.name,
     aliases: isa.aliases,
     makeParser: () => makeParser(isa),
     lineComment: isa.lineComments[0],

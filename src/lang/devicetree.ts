@@ -69,6 +69,7 @@ export function makeDevicetreeParser(): Parser<DtsState> {
 
 export const DEVICETREE: Language = {
   id: "dts",
+  name: "Devicetree",
   aliases: ["dtsi", "devicetree", "device-tree"],
   makeParser: makeDevicetreeParser,
   lineComment: "//",

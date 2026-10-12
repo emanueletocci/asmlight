@@ -32,6 +32,7 @@ export function isArm32Mnemonic(word: string): boolean {
 
 export const ARM32: IsaSpec = {
   id: "arm32",
+  name: "ARM",
   aliases: ["arm", "thumb"],
   isMnemonic: isArm32Mnemonic,
   registers: REGISTERS,
