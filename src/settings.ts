@@ -1,20 +1,20 @@
 import { type App, PluginSettingTab, Setting } from "obsidian";
-import type AsmlighPlugin from "./main";
+import type AsmlightPlugin from "./main";
 
-export interface AsmlighSettings {
+export interface AsmlightSettings {
   hoverCards: boolean;
   hoverRequiresModifier: boolean;
   hoverDelay: number;
 }
 
-export const DEFAULT_SETTINGS: AsmlighSettings = {
+export const DEFAULT_SETTINGS: AsmlightSettings = {
   hoverCards: true,
   hoverRequiresModifier: false,
   hoverDelay: 300,
 };
 
-export class AsmlighSettingTab extends PluginSettingTab {
-  constructor(app: App, private readonly plugin: AsmlighPlugin) {
+export class AsmlightSettingTab extends PluginSettingTab {
+  constructor(app: App, private readonly plugin: AsmlightPlugin) {
     super(app, plugin);
   }
 

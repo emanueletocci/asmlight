@@ -1,6 +1,6 @@
 {
-  "id": "asmligh",
-  "name": "Asmligh",
+  "id": "asmlight",
+  "name": "Asmlight",
   "version": "0.3.0",
   "minAppVersion": "1.5.0",
   "description": "Highlighting and hover docs for RISC-V and ARM assembly, Makefiles, linker scripts and Devicetree, plus register bitfield diagrams.",

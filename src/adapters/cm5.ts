@@ -9,7 +9,7 @@ export function toCm5Mode(lang: Language) {
     copyState: parser.copyState,
     token(stream: Stream, state: unknown): string | null {
       const kind = parser.token(stream, state);
-      return kind ? `${CM_STYLE[kind]} asmligh-${kind} asmligh-lang-${lang.id}` : null;
+      return kind ? `${CM_STYLE[kind]} asmlight-${kind} asmlight-lang-${lang.id}` : null;
     },
     lineComment: lang.lineComment,
     blockCommentStart: lang.blockComment?.[0],
@@ -26,8 +26,8 @@ export interface Cm5Like {
   modeInfo?: Array<{ name: string; mime?: string; mode?: string; alias?: string[] }>;
 }
 
-const mimeFor = (lang: Language) => `text/x-asmligh-${lang.id}`;
-const infoName = (lang: Language) => `Asmligh ${lang.id}`;
+const mimeFor = (lang: Language) => `text/x-asmlight-${lang.id}`;
+const infoName = (lang: Language) => `Asmlight ${lang.id}`;
 
 /** Registers modes under every tag, plus modeInfo so findModeByName resolves any case. */
 export function registerCm5Modes(CM: Cm5Like | undefined, langs: readonly Language[]): void {

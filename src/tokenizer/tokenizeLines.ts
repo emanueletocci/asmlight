@@ -13,7 +13,7 @@ export function tokenizeLines(
     while (!stream.eol()) {
       const kind = parser.token(stream, state);
       if (stream.pos === stream.start) {
-        throw new Error(`asmligh: tokenizer made no progress at ${JSON.stringify(line.slice(stream.pos))}`);
+        throw new Error(`asmlight: tokenizer made no progress at ${JSON.stringify(line.slice(stream.pos))}`);
       }
       tokens.push({ text: stream.current(), kind });
       stream.start = stream.pos;

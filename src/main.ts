@@ -4,12 +4,12 @@ import { highlightCodeElement, languageForCodeElement } from "./adapters/reading
 import { HoverController } from "./hover/hover";
 import { ALL_LANGUAGES, languageForTag } from "./languages";
 import { renderRegmap } from "./regmap/render";
-import { AsmlighSettingTab, DEFAULT_SETTINGS, type AsmlighSettings } from "./settings";
+import { AsmlightSettingTab, DEFAULT_SETTINGS, type AsmlightSettings } from "./settings";
 
 type PrismEnv = { element: HTMLElement; language: string };
 
-export default class AsmlighPlugin extends Plugin {
-  settings: AsmlighSettings = { ...DEFAULT_SETTINGS };
+export default class AsmlightPlugin extends Plugin {
+  settings: AsmlightSettings = { ...DEFAULT_SETTINGS };
   private unloaded = false;
   private readonly hovers: HoverController[] = [];
 
@@ -22,9 +22,9 @@ export default class AsmlighPlugin extends Plugin {
   };
 
   async onload() {
-    this.settings = { ...DEFAULT_SETTINGS, ...((await this.loadData()) as Partial<AsmlighSettings> | null) };
+    this.settings = { ...DEFAULT_SETTINGS, ...((await this.loadData()) as Partial<AsmlightSettings> | null) };
     if (this.unloaded) return;
-    this.addSettingTab(new AsmlighSettingTab(this.app, this));
+    this.addSettingTab(new AsmlightSettingTab(this.app, this));
 
     this.attachHover(document);
     this.registerEvent(this.app.workspace.on("window-open", (_w, win) => this.attachHover(win.document)));

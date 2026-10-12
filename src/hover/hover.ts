@@ -6,16 +6,16 @@ const KINDS: ReadonlySet<string> = new Set<TokenKind>([
   "keyword", "function", "variable", "operator", "property",
 ]);
 
-/** Matches token spans in Reading view (`asmligh-…`) and the editor (`cm-asmligh-…`). */
-export const TOKEN_SELECTOR = '[class*="asmligh-lang-"]';
+/** Matches token spans in Reading view (`asmlight-…`) and the editor (`cm-asmlight-…`). */
+export const TOKEN_SELECTOR = '[class*="asmlight-lang-"]';
 
 export function parseTokenClasses(classes: Iterable<string>): { kind: TokenKind; lang: string } | undefined {
   let kind: TokenKind | undefined;
   let lang: string | undefined;
   for (const raw of classes) {
     const cls = raw.replace(/^cm-/, "");
-    if (cls.startsWith("asmligh-lang-")) lang = cls.slice("asmligh-lang-".length);
-    else if (cls.startsWith("asmligh-") && KINDS.has(cls.slice(8))) kind = cls.slice(8) as TokenKind;
+    if (cls.startsWith("asmlight-lang-")) lang = cls.slice("asmlight-lang-".length);
+    else if (cls.startsWith("asmlight-") && KINDS.has(cls.slice("asmlight-".length))) kind = cls.slice("asmlight-".length) as TokenKind;
   }
   return kind && lang ? { kind, lang } : undefined;
 }
@@ -34,19 +34,19 @@ export function renderCard(doc: HoverDoc, d: Document): HTMLElement {
     if (text !== undefined) e.textContent = text;
     return e;
   };
-  const card = el("div", "asmligh-hover");
+  const card = el("div", "asmlight-hover");
   card.setAttribute("role", "tooltip");
-  const head = el("div", "asmligh-hover-head");
-  head.append(el("code", "asmligh-hover-title", doc.title), el("span", "asmligh-hover-tag", doc.tag));
-  card.append(head, el("div", "asmligh-hover-summary", doc.summary));
+  const head = el("div", "asmlight-hover-head");
+  head.append(el("code", "asmlight-hover-title", doc.title), el("span", "asmlight-hover-tag", doc.tag));
+  card.append(head, el("div", "asmlight-hover-summary", doc.summary));
   for (const [label, body] of [["Syntax", doc.syntax], ["Operation", doc.operation]] as const) {
     if (!body) continue;
-    const block = el("div", "asmligh-hover-block");
-    block.append(el("div", "asmligh-hover-label", label), el("code", "asmligh-hover-code", body));
+    const block = el("div", "asmlight-hover-block");
+    block.append(el("div", "asmlight-hover-label", label), el("code", "asmlight-hover-code", body));
     card.append(block);
   }
   if (doc.notes?.length) {
-    const ul = el("ul", "asmligh-hover-notes");
+    const ul = el("ul", "asmlight-hover-notes");
     for (const n of doc.notes) ul.append(el("li", "", n));
     card.append(ul);
   }

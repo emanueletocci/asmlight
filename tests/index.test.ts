@@ -39,9 +39,9 @@ describe("language registry", () => {
 });
 
 describe("cm5 adapter", () => {
-  it("maps token kinds to cm style + asmligh class", () => {
+  it("maps token kinds to cm style + asmlight class", () => {
     const mode = toCm5Mode(asmLanguage(RISCV));
     const stream = new StringStream("addi a0", 4, 2);
-    expect(mode.token(stream, mode.startState())).toBe("keyword asmligh-mnemonic asmligh-lang-riscv");
+    expect(mode.token(stream, mode.startState())).toBe("keyword asmlight-mnemonic asmlight-lang-riscv");
   });
 });

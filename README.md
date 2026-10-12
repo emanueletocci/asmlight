@@ -1,4 +1,4 @@
-# Asmligh
+# Asmlight
 
 Obsidian plugin for systems and embedded notes. It does three things:
 
@@ -50,7 +50,7 @@ Hover over a highlighted word in a code block to see what it does:
 | Linker script | Commands (`SECTIONS`, `KEEP`, `PROVIDE`, `AT`, `NOLOAD`, `/DISCARD/`, …), built-in functions (`ALIGN`, `LOADADDR`, `ORIGIN`, `SIZEOF`, …), the location counter `.` and region `>`. |
 | Devicetree | Standard properties (`compatible`, `reg`, `ranges`, `interrupts`, `clocks`, `status`, …), generic patterns (`*-gpios`, `*-supply`, `pinctrl-N`, `#*-cells`), `/chosen` properties, RISC-V CPU properties, special nodes and `dt-bindings` constants. |
 
-Settings > Asmligh has three options:
+Settings > Asmlight has three options:
 
 - **Hover cards:** turn the cards on or off.
 - **Require Ctrl/Cmd:** only show a card while Ctrl (Cmd on macOS) is held, like Obsidian's page preview.
@@ -94,20 +94,20 @@ If you leave out the header, the width is the next of 8/16/32/64/128 that fits t
 
 ## Styling
 
-Every highlighted token gets an `asmligh-<kind>` class. The kinds are:
+Every highlighted token gets an `asmlight-<kind>` class. The kinds are:
 
 - `comment`, `label`, `mnemonic`, `directive`, `register`, `number`, `string`, `reloc`
 - `keyword`, `function`, `variable`, `operator`, `property`
 
-Each token also gets an `asmligh-lang-<id>` class. The editor prefixes classes with `cm-`, so target both forms in a CSS snippet:
+Each token also gets an `asmlight-lang-<id>` class. The editor prefixes classes with `cm-`, so target both forms in a CSS snippet:
 
-    .asmligh-register, .cm-asmligh-register { color: var(--color-orange); }
+    .asmlight-register, .cm-asmlight-register { color: var(--color-orange); }
 
-Hover cards use `.asmligh-hover`. Diagrams use `.asmligh-regmap` and set its width per bit with `--asmligh-bit-width`.
+Hover cards use `.asmlight-hover`. Diagrams use `.asmlight-regmap` and set its width per bit with `--asmlight-bit-width`.
 
 ## Install
 
-Build with `npm install && npm run build` (`main.js` is a build artifact). Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/asmligh/`, then enable the plugin in Settings > Community plugins.
+Build with `npm install && npm run build` (`main.js` is a build artifact). Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/asmlight/`, then enable the plugin in Settings > Community plugins.
 
 ## Development
 

@@ -6,9 +6,9 @@ import { languageForTag } from "../src/languages";
 
 describe("parseTokenClasses", () => {
   it("reads Reading-view and editor class names", () => {
-    expect(parseTokenClasses(["token", "keyword", "asmligh-mnemonic", "asmligh-lang-riscv"])).toEqual({ kind: "mnemonic", lang: "riscv" });
-    expect(parseTokenClasses(["cm-keyword", "cm-asmligh-mnemonic", "cm-asmligh-lang-arm64"])).toEqual({ kind: "mnemonic", lang: "arm64" });
-    expect(parseTokenClasses(["asmligh-regmap-field"])).toBeUndefined();
+    expect(parseTokenClasses(["token", "keyword", "asmlight-mnemonic", "asmlight-lang-riscv"])).toEqual({ kind: "mnemonic", lang: "riscv" });
+    expect(parseTokenClasses(["cm-keyword", "cm-asmlight-mnemonic", "cm-asmlight-lang-arm64"])).toEqual({ kind: "mnemonic", lang: "arm64" });
+    expect(parseTokenClasses(["asmlight-regmap-field"])).toBeUndefined();
   });
 });
 
@@ -47,8 +47,8 @@ describe("hover in a highlighted block", () => {
   it("renders a card with escaped text", () => {
     const card = renderCard({ title: "<b>", tag: "t", summary: "s", syntax: "x", operation: "y", notes: ["n"] }, document);
     expect(card.querySelector("b")).toBeNull();
-    expect(card.querySelectorAll(".asmligh-hover-block")).toHaveLength(2);
-    expect(card.querySelector(".asmligh-hover-notes li")!.textContent).toBe("n");
+    expect(card.querySelectorAll(".asmlight-hover-block")).toHaveLength(2);
+    expect(card.querySelector(".asmlight-hover-notes li")!.textContent).toBe("n");
   });
 
   function setup(opts: Partial<{ enabled: boolean; mod: boolean }> = {}) {
@@ -59,7 +59,7 @@ describe("hover in a highlighted block", () => {
     });
     const tokens = code.querySelectorAll("span");
     const over = (el: Element, init: MouseEventInit = {}) => el.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, ...init }));
-    const card = () => document.querySelector(".asmligh-hover");
+    const card = () => document.querySelector(".asmlight-hover");
     return { ctl, tokens, over, card, code };
   }
 
@@ -68,11 +68,11 @@ describe("hover in a highlighted block", () => {
     over(tokens[1]);
     expect(card()).toBeNull();
     vi.advanceTimersByTime(300);
-    expect(card()!.querySelector(".asmligh-hover-title")!.textContent).toBe("PSP");
+    expect(card()!.querySelector(".asmlight-hover-title")!.textContent).toBe("PSP");
     over(tokens[2]);
     expect(card()).toBeNull();
     vi.advanceTimersByTime(300);
-    expect(card()!.querySelector(".asmligh-hover-title")!.textContent).toBe("r0");
+    expect(card()!.querySelector(".asmlight-hover-title")!.textContent).toBe("r0");
     over(code);
     expect(card()).toBeNull();
     ctl.destroy();

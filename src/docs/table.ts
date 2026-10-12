@@ -16,7 +16,7 @@ export function docTable(src: string): Map<string, DocEntry> {
     const line = raw.trim();
     if (!line) continue;
     const [keys, summary, syntax, operation] = line.split("¦").map((c) => c.trim());
-    if (!summary) throw new Error(`asmligh: doc row without summary: ${line}`);
+    if (!summary) throw new Error(`asmlight: doc row without summary: ${line}`);
     const entry: DocEntry = { summary };
     if (syntax) entry.syntax = syntax;
     if (operation) entry.operation = operation;

@@ -81,16 +81,16 @@ describe("renderRegmap", () => {
   it("draws bit numbers, fields, bit values and a legend with decoded enums", () => {
     const el = document.createElement("div");
     renderRegmap(MSTATUS, el);
-    expect(el.querySelector(".asmligh-regmap-title")!.textContent).toBe("mstatus32-bit= 0x00001888Machine status");
-    const bitnos = Array.from(el.querySelectorAll(".asmligh-regmap-bitno")).map((n) => n.textContent);
+    expect(el.querySelector(".asmlight-regmap-title")!.textContent).toBe("mstatus32-bit= 0x00001888Machine status");
+    const bitnos = Array.from(el.querySelectorAll(".asmlight-regmap-bitno")).map((n) => n.textContent);
     expect(bitnos[0]).toBe("31");
     expect(bitnos[31]).toBe("0");
-    const fields = Array.from(el.querySelectorAll<HTMLElement>(".asmligh-regmap-field"));
+    const fields = Array.from(el.querySelectorAll<HTMLElement>(".asmlight-regmap-field"));
     expect(fields.map((f) => [f.textContent, f.style.gridColumn])).toEqual([
       ["", "span 19"], ["MPP", "span 2"], ["", "span 3"], ["MPIE", "span 1"], ["", "span 3"], ["MIE", "span 1"], ["", "span 3"],
     ]);
     expect(fields[3].querySelector(".is-vertical")).not.toBeNull();
-    expect(el.querySelectorAll(".asmligh-regmap-bit.is-set")).toHaveLength(4);
+    expect(el.querySelectorAll(".asmlight-regmap-bit.is-set")).toHaveLength(4);
     const rows = Array.from(el.querySelectorAll("tbody tr")).map((tr) => Array.from(tr.children).map((c) => c.textContent));
     expect(rows[0]).toEqual(["12:11", "MPP", "0b11 (3) → M", "Previous privilege0 = U, 1 = S, 3 = M"]);
   });
@@ -98,9 +98,9 @@ describe("renderRegmap", () => {
   it("shows errors and a hint for empty blocks", () => {
     const el = document.createElement("div");
     renderRegmap("A 3\nB 3", el);
-    expect(el.querySelector(".asmligh-regmap-errors")!.textContent).toBe("B overlaps A");
+    expect(el.querySelector(".asmlight-regmap-errors")!.textContent).toBe("B overlaps A");
     renderRegmap("# nothing", el);
-    expect(el.querySelector(".asmligh-regmap-empty")).not.toBeNull();
+    expect(el.querySelector(".asmlight-regmap-empty")).not.toBeNull();
   });
 
   it("only uses textContent, so field names cannot inject markup", () => {
