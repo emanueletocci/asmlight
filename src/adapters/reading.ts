@@ -18,7 +18,7 @@ export function highlightCodeElement(code: HTMLElement, lang: Language): void {
     for (const t of tokens) {
       if (!t.kind) { frag.append(t.text); continue; }
       const span = document.createElement("span");
-      span.className = `token ${PRISM_CLASS[t.kind]} asmligh-${t.kind}`;
+      span.className = `token ${PRISM_CLASS[t.kind]} asmligh-${t.kind} asmligh-lang-${lang.id}`;
       span.textContent = t.text;
       frag.append(span);
     }

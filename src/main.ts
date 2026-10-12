@@ -1,12 +1,17 @@
 import { loadPrism, MarkdownView, Plugin } from "obsidian";
 import { registerCm5Modes, unregisterCm5Modes } from "./adapters/cm5";
 import { highlightCodeElement, languageForCodeElement } from "./adapters/reading";
+import { HoverController } from "./hover/hover";
 import { ALL_LANGUAGES, languageForTag } from "./languages";
+import { renderRegmap } from "./regmap/render";
+import { AsmlighSettingTab, DEFAULT_SETTINGS, type AsmlighSettings } from "./settings";
 
 type PrismEnv = { element: HTMLElement; language: string };
 
 export default class AsmlighPlugin extends Plugin {
+  settings: AsmlighSettings = { ...DEFAULT_SETTINGS };
   private unloaded = false;
+  private readonly hovers: HoverController[] = [];
 
   // Prism replaces the contents of code blocks whose language it doesn't know.
   // If it runs after our post-processor, this puts the highlighting back.
@@ -17,6 +22,17 @@ export default class AsmlighPlugin extends Plugin {
   };
 
   async onload() {
+    this.settings = { ...DEFAULT_SETTINGS, ...((await this.loadData()) as Partial<AsmlighSettings> | null) };
+    if (this.unloaded) return;
+    this.addSettingTab(new AsmlighSettingTab(this.app, this));
+
+    this.attachHover(document);
+    this.registerEvent(this.app.workspace.on("window-open", (_w, win) => this.attachHover(win.document)));
+
+    for (const tag of ["regmap", "bitfield"]) {
+      this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderRegmap(source, el));
+    }
+
     registerCm5Modes((window as any).CodeMirror, ALL_LANGUAGES);
     // Editor highlighting must not depend on Prism loading.
     this.app.workspace.updateOptions();
@@ -37,6 +53,24 @@ export default class AsmlighPlugin extends Plugin {
     this.rerenderReadingViews();
   }
 
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
+
+  private attachHover(doc: Document) {
+    const controller = new HoverController(doc, {
+      enabled: () => this.settings.hoverCards,
+      requireModifier: () => this.settings.hoverRequiresModifier,
+      delay: () => this.settings.hoverDelay,
+    });
+    this.hovers.push(controller);
+    // A closed popout window takes its document with it.
+    this.registerDomEvent(doc.defaultView!, "unload", () => {
+      controller.destroy();
+      this.hovers.splice(this.hovers.indexOf(controller), 1);
+    });
+  }
+
   /** Reading view caches rendered sections; force a re-render so toggling the plugin takes effect. */
   private rerenderReadingViews() {
     for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
@@ -46,6 +80,7 @@ export default class AsmlighPlugin extends Plugin {
 
   onunload() {
     this.unloaded = true;
+    for (const h of this.hovers.splice(0)) h.destroy();
     unregisterCm5Modes((window as any).CodeMirror, ALL_LANGUAGES);
 
     const hooks: unknown[] | undefined = (window as any).Prism?.hooks?.all?.["after-highlight"];

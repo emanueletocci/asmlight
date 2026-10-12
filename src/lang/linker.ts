@@ -1,3 +1,4 @@
+import { describeLinker } from "../docs/linker";
 import { words } from "../isa/common";
 import type { Language, Parser, TokenKind } from "../tokenizer/types";
 
@@ -87,4 +88,5 @@ export const LINKER: Language = {
   aliases: ["ld", "lds", "linkerscript", "linker-script"],
   makeParser: makeLinkerParser,
   blockComment: ["/*", "*/"],
+  describe: describeLinker,
 };

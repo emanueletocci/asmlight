@@ -1,7 +1,17 @@
 export type TokenKind =
   | "comment" | "label" | "mnemonic" | "directive"
   | "register" | "number" | "string" | "reloc"
-  | "keyword" | "function" | "variable" | "operator";
+  | "keyword" | "function" | "variable" | "operator" | "property";
+
+/** Content of a hover card. */
+export interface HoverDoc {
+  title: string;
+  tag: string;                           // e.g. "RISC-V instruction"
+  summary: string;
+  syntax?: string;
+  operation?: string;
+  notes?: string[];
+}
 
 /** A fence language: its tags, comment syntax and a stream tokenizer. */
 export interface Language {
@@ -10,6 +20,8 @@ export interface Language {
   makeParser(): Parser<any>;
   lineComment?: string;
   blockComment?: [string, string];
+  /** Hover card for a token, given its exact text and kind. */
+  describe?(text: string, kind: TokenKind): HoverDoc | undefined;
 }
 
 export interface IsaSpec {
@@ -19,6 +31,7 @@ export interface IsaSpec {
   registers: ReadonlySet<string>;        // lowercase
   lineComments: string[];
   hashIsImmediate: boolean;              // ARM: "#4" is an immediate
+  describe?(text: string, kind: TokenKind): HoverDoc | undefined;
 }
 
 export interface AsmState {

@@ -1,0 +1,215 @@
+/* Asmligh: hover cards and regmap register diagrams. Token colors come from the theme. */
+
+.asmligh-hover {
+  position: fixed;
+  z-index: var(--layer-tooltip, 60);
+  max-width: min(440px, calc(100vw - 16px));
+  padding: 8px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s, 0 2px 8px rgba(0, 0, 0, 0.15));
+  color: var(--text-normal);
+  font-family: var(--font-interface);
+  font-size: var(--font-ui-small, 13px);
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.asmligh-hover-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.asmligh-hover-title {
+  font-family: var(--font-monospace);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-accent);
+  background: none;
+  padding: 0;
+}
+
+.asmligh-hover-tag {
+  margin-left: auto;
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.asmligh-hover-block {
+  margin-top: 6px;
+}
+
+.asmligh-hover-label {
+  font-size: var(--font-ui-smaller, 12px);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.asmligh-hover-code {
+  display: block;
+  padding: 3px 6px;
+  border-radius: var(--radius-s, 4px);
+  background: var(--code-background, var(--background-secondary));
+  font-family: var(--font-monospace);
+  font-size: 0.95em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.asmligh-hover-notes {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+  color: var(--text-muted);
+}
+
+/* regmap */
+
+.asmligh-regmap {
+  --asmligh-bit-width: 1.5em;
+  margin: 0.5em 0 1em;
+}
+
+.asmligh-regmap-reg {
+  margin: 0 0 1.25em;
+}
+
+.asmligh-regmap-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6em;
+  margin-bottom: 0.4em;
+}
+
+.asmligh-regmap-title .asmligh-regmap-name {
+  font-weight: var(--font-semibold, 600);
+  font-size: 1.05em;
+}
+
+.asmligh-regmap-width,
+.asmligh-regmap-caption {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small, 13px);
+}
+
+.asmligh-regmap-errors {
+  margin: 0 0 0.5em;
+  color: var(--text-error);
+  font-size: var(--font-ui-small, 13px);
+}
+
+.asmligh-regmap-scroll {
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.asmligh-regmap-grid {
+  display: grid;
+  min-width: max-content;
+  margin-bottom: 0.6em;
+  padding-left: 1px;           /* room for the first field's -1px overlap */
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+}
+
+.asmligh-regmap-bitno {
+  text-align: center;
+  font-size: 0.68em;
+  color: var(--text-faint);
+  padding-bottom: 2px;
+}
+
+.asmligh-regmap-field {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.4em;
+  padding: 3px 1px;
+  border: 1px solid var(--background-modifier-border-hover, var(--background-modifier-border));
+  margin-left: -1px;
+  background: var(--background-secondary);
+  overflow: hidden;
+}
+
+.asmligh-regmap-field.is-gap,
+.asmligh-regmap-field.is-reserved {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--background-primary) 0 4px,
+    var(--background-modifier-border) 4px 5px
+  );
+}
+
+.asmligh-regmap-label {
+  font-size: 0.78em;
+  font-weight: var(--font-semibold, 600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asmligh-regmap-field.is-reserved .asmligh-regmap-label {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.asmligh-regmap-label.is-vertical {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  max-height: 8em;
+}
+
+.asmligh-regmap-bit {
+  text-align: center;
+  font-size: 0.75em;
+  color: var(--text-faint);
+  padding-top: 2px;
+}
+
+.asmligh-regmap-bit.is-set {
+  color: var(--text-accent);
+  font-weight: var(--font-semibold, 600);
+}
+
+.asmligh-regmap-legend {
+  border-collapse: collapse;
+  font-size: var(--font-ui-small, 13px);
+  margin: 0;
+}
+
+.asmligh-regmap-legend th,
+.asmligh-regmap-legend td {
+  padding: 2px 10px 2px 0;
+  text-align: left;
+  vertical-align: top;
+  border: none;
+}
+
+.asmligh-regmap-legend th {
+  color: var(--text-muted);
+  font-weight: var(--font-semibold, 600);
+}
+
+.asmligh-regmap-legend .asmligh-regmap-bits,
+.asmligh-regmap-legend .asmligh-regmap-fieldvalue {
+  font-family: var(--font-monospace);
+  white-space: nowrap;
+}
+
+.asmligh-regmap-legend tr.is-reserved {
+  color: var(--text-faint);
+}
+
+.asmligh-regmap-enums {
+  color: var(--text-muted);
+  font-size: 0.92em;
+}
+
+.asmligh-regmap-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}

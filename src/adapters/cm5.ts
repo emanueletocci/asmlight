@@ -9,7 +9,7 @@ export function toCm5Mode(lang: Language) {
     copyState: parser.copyState,
     token(stream: Stream, state: unknown): string | null {
       const kind = parser.token(stream, state);
-      return kind ? `${CM_STYLE[kind]} asmligh-${kind}` : null;
+      return kind ? `${CM_STYLE[kind]} asmligh-${kind} asmligh-lang-${lang.id}` : null;
     },
     lineComment: lang.lineComment,
     blockCommentStart: lang.blockComment?.[0],

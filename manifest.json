@@ -1,9 +1,9 @@
 {
   "id": "asmligh",
   "name": "Asmligh",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "minAppVersion": "1.5.0",
-  "description": "Syntax highlighting for ARM (AArch32/Thumb, AArch64) and RISC-V assembly, Makefile and linker script code blocks.",
+  "description": "Highlighting and hover docs for RISC-V and ARM assembly, Makefiles, linker scripts and Devicetree, plus register bitfield diagrams.",
   "author": "mecilh",
   "isDesktopOnly": false
 }

@@ -6,7 +6,7 @@
     "strict": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "lib": ["DOM", "ES2018", "ES2019.Array"],
+    "lib": ["DOM", "ES2018", "ES2019.Array", "ES2020.BigInt"],
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]
