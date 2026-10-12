@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import { tokenizeLines } from "../src/tokenizer/tokenizeLines";
 import type { IsaSpec } from "../src/tokenizer/types";
 import { kinds } from "./helpers";
-import { ALL_ISAS } from "../src/isa";
+import { ALL_LANGUAGES } from "../src/languages";
+import { asmLanguage } from "../src/tokenizer/parser";
 
-const T: IsaSpec = {
+const T_ISA: IsaSpec = {
   id: "t",
   aliases: [],
   isMnemonic: (w) => w === "mov" || w === "nop",
@@ -12,6 +13,7 @@ const T: IsaSpec = {
   lineComments: [";"],
   hashIsImmediate: true,
 };
+const T = asmLanguage(T_ISA);
 
 describe("parser core", () => {
   it("label, mnemonic, register, immediate, comment", () => {
@@ -74,11 +76,14 @@ describe("lossless round-trip", () => {
     riscv: "start:\taddi\ta0, a0, 1 # héllo λ\n.string \"unterminated\n/* block\n comment */ ret\n",
     arm32: "loop:\tmov r0, #1 @ ünï\n\t.asciz \"abc\n/* b\nc */\tbx lr\n",
     arm64: "_main:\n\tmov x0, #0x10 // żółć\n\t.ascii \"oops\n/* x\n y */ ret",
+    makefile: "CC := gcc # ç\nall: $(OBJ) \\\n\tmain.o\n\t@echo \"oops\n\techo 'x\ndefine X =\n$(Y\nendef\n",
+    linker: "MEMORY { FLASH (rx) : ORIGIN = 0x0, LENGTH = 64K }\n/* ü\n x */ .text : { *(.text*) } > FLASH\n\"oops",
   };
-  for (const isa of ALL_ISAS) {
-    it(`${isa.id}`, () => {
-      const src = samples[isa.id];
-      expect(tokenizeLines(src, isa).map((l) => l.map((t) => t.text).join("")).join("\n")).toBe(src);
+  for (const lang of ALL_LANGUAGES) {
+    it(`${lang.id}`, () => {
+      const src = samples[lang.id];
+      expect(src).toBeDefined();
+      expect(tokenizeLines(src, lang).map((l) => l.map((t) => t.text).join("")).join("\n")).toBe(src);
     });
   }
 });

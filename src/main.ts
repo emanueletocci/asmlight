@@ -1,7 +1,7 @@
 import { loadPrism, MarkdownView, Plugin } from "obsidian";
 import { registerCm5Modes, unregisterCm5Modes } from "./adapters/cm5";
-import { highlightCodeElement, isaForCodeElement } from "./adapters/reading";
-import { ALL_ISAS, isaForTag } from "./isa";
+import { highlightCodeElement, languageForCodeElement } from "./adapters/reading";
+import { ALL_LANGUAGES, languageForTag } from "./languages";
 
 type PrismEnv = { element: HTMLElement; language: string };
 
@@ -12,20 +12,20 @@ export default class AsmlighPlugin extends Plugin {
   // If it runs after our post-processor, this puts the highlighting back.
   private readonly prismHook = (env: PrismEnv) => {
     if (this.unloaded) return;
-    const isa = isaForTag(env.language ?? "");
-    if (isa && env.element) highlightCodeElement(env.element, isa);
+    const lang = languageForTag(env.language ?? "");
+    if (lang && env.element) highlightCodeElement(env.element, lang);
   };
 
   async onload() {
-    registerCm5Modes((window as any).CodeMirror, ALL_ISAS);
+    registerCm5Modes((window as any).CodeMirror, ALL_LANGUAGES);
     // Editor highlighting must not depend on Prism loading.
     this.app.workspace.updateOptions();
 
     this.registerMarkdownPostProcessor((el) => {
       if (this.unloaded) return;
       el.querySelectorAll<HTMLElement>("pre > code").forEach((code) => {
-        const isa = isaForCodeElement(code);
-        if (isa) highlightCodeElement(code, isa);
+        const lang = languageForCodeElement(code);
+        if (lang) highlightCodeElement(code, lang);
       });
     });
 
@@ -46,7 +46,7 @@ export default class AsmlighPlugin extends Plugin {
 
   onunload() {
     this.unloaded = true;
-    unregisterCm5Modes((window as any).CodeMirror, ALL_ISAS);
+    unregisterCm5Modes((window as any).CodeMirror, ALL_LANGUAGES);
 
     const hooks: unknown[] | undefined = (window as any).Prism?.hooks?.all?.["after-highlight"];
     const i = hooks?.indexOf(this.prismHook) ?? -1;

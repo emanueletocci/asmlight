@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { registerCm5Modes, unregisterCm5Modes, type Cm5Like } from "../src/adapters/cm5";
-import { ALL_ISAS } from "../src/isa";
+import { ALL_LANGUAGES } from "../src/languages";
 
 function fakeCM(modeInfo: Cm5Like["modeInfo"] | undefined = []) {
   const CM: any = {
@@ -23,13 +23,13 @@ function fakeCM(modeInfo: Cm5Like["modeInfo"] | undefined = []) {
 describe("registerCm5Modes", () => {
   it("defines modes, mimes and modeInfo; findModeByName is case-insensitive", () => {
     const CM = fakeCM();
-    registerCm5Modes(CM, ALL_ISAS);
-    for (const isa of ALL_ISAS) {
-      for (const tag of [isa.id, ...isa.aliases]) {
+    registerCm5Modes(CM, ALL_LANGUAGES);
+    for (const lang of ALL_LANGUAGES) {
+      for (const tag of [lang.id, ...lang.aliases]) {
         expect(CM.modes[tag]).toBeTypeOf("function");
-        expect(CM.findModeByName(tag.toUpperCase())?.mode).toBe(isa.id);
+        expect(CM.findModeByName(tag.toUpperCase())?.mode).toBe(lang.id);
       }
-      expect(CM.mimeModes[`text/x-asmligh-${isa.id}`]).toBe(isa.id);
+      expect(CM.mimeModes[`text/x-asmligh-${lang.id}`]).toBe(lang.id);
     }
     expect(CM.findModeByName("RISCV").mime).toBe("text/x-asmligh-riscv");
   });
@@ -37,7 +37,7 @@ describe("registerCm5Modes", () => {
   it("does not override names already claimed by another modeInfo entry", () => {
     const other = { name: "Other", mime: "text/x-o", mode: "o", alias: ["ARM"] };
     const CM = fakeCM([other]);
-    registerCm5Modes(CM, ALL_ISAS);
+    registerCm5Modes(CM, ALL_LANGUAGES);
     expect(CM.findModeByName("arm")).toBe(other);
     expect(CM.findModeByName("arm32").mode).toBe("arm32");
     expect(other.alias).toEqual(["ARM"]);
@@ -45,9 +45,9 @@ describe("registerCm5Modes", () => {
 
   it("works without modeInfo or CM", () => {
     const CM = fakeCM(undefined);
-    registerCm5Modes(CM, ALL_ISAS);
+    registerCm5Modes(CM, ALL_LANGUAGES);
     expect(CM.modes.riscv).toBeTypeOf("function");
-    expect(() => registerCm5Modes(undefined, ALL_ISAS)).not.toThrow();
+    expect(() => registerCm5Modes(undefined, ALL_LANGUAGES)).not.toThrow();
   });
 });
 
@@ -56,11 +56,11 @@ describe("unregisterCm5Modes", () => {
     const other = { name: "Other", mime: "text/x-o", mode: "o", alias: ["o"] };
     const CM = fakeCM([other]);
     CM.modes.keep = 1;
-    registerCm5Modes(CM, ALL_ISAS);
-    unregisterCm5Modes(CM, ALL_ISAS);
+    registerCm5Modes(CM, ALL_LANGUAGES);
+    unregisterCm5Modes(CM, ALL_LANGUAGES);
     expect(CM.modes).toEqual({ keep: 1 });
     expect(CM.mimeModes).toEqual({});
     expect(CM.modeInfo).toEqual([other]);
-    expect(() => unregisterCm5Modes(undefined, ALL_ISAS)).not.toThrow();
+    expect(() => unregisterCm5Modes(undefined, ALL_LANGUAGES)).not.toThrow();
   });
 });

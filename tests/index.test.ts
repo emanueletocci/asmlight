@@ -3,6 +3,8 @@ import { StringStream } from "@codemirror/language";
 import { ALL_ISAS, isaForTag } from "../src/isa";
 import { RISCV } from "../src/isa/riscv";
 import { toCm5Mode } from "../src/adapters/cm5";
+import { ALL_LANGUAGES, languageForTag } from "../src/languages";
+import { asmLanguage } from "../src/tokenizer/parser";
 
 describe("registry", () => {
   it("resolves ids and aliases case-insensitively", () => {
@@ -21,9 +23,24 @@ describe("registry", () => {
   });
 });
 
+describe("language registry", () => {
+  it("resolves assembly, Makefile and linker script tags", () => {
+    expect(languageForTag("RV64")?.id).toBe("riscv");
+    expect(languageForTag("Makefile")?.id).toBe("makefile");
+    expect(languageForTag("make")?.id).toBe("makefile");
+    expect(languageForTag("LD")?.id).toBe("linker");
+    expect(languageForTag("lds")?.id).toBe("linker");
+    expect(languageForTag("cmake")).toBeUndefined();
+  });
+  it("no tag is claimed twice", () => {
+    const tags = ALL_LANGUAGES.flatMap((l) => [l.id, ...l.aliases]);
+    expect(new Set(tags).size).toBe(tags.length);
+  });
+});
+
 describe("cm5 adapter", () => {
   it("maps token kinds to cm style + asmligh class", () => {
-    const mode = toCm5Mode(RISCV);
+    const mode = toCm5Mode(asmLanguage(RISCV));
     const stream = new StringStream("addi a0", 4, 2);
     expect(mode.token(stream, mode.startState())).toBe("keyword asmligh-mnemonic");
   });

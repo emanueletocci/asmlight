@@ -1,5 +1,5 @@
 import { isRegister } from "../isa/common";
-import type { AsmParser, AsmState, IsaSpec, Stream, TokenKind } from "./types";
+import type { AsmParser, AsmState, IsaSpec, Language, Stream, TokenKind } from "./types";
 
 const NUMBER = /^-?(?:0x[0-9a-f]+|0b[01]+|\d+(?:\.\d+)?(?:e[+-]?\d+)?)\b/i;
 const PREPROC = /^#(?:include|define|undef|if|ifdef|ifndef|elif|else|endif)\b/;
@@ -48,5 +48,15 @@ export function makeParser(isa: IsaSpec): AsmParser {
       stream.next();
       return null;
     },
+  };
+}
+
+export function asmLanguage(isa: IsaSpec): Language {
+  return {
+    id: isa.id,
+    aliases: isa.aliases,
+    makeParser: () => makeParser(isa),
+    lineComment: isa.lineComments[0],
+    blockComment: ["/*", "*/"],
   };
 }
