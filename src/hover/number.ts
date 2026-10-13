@@ -28,7 +28,7 @@ export function parseLiteral(text: string, lang = ""): Literal | undefined {
   s = s.replace(/_/g, "");
 
   let shift = 0;
-  const m = /^0([xbo])([0-9a-f]+?)(ull|ul|ll|u|l|[kmg])?$/i.exec(s);
+  const m = /^0([xbo])([0-9a-f]+?)([ul]{1,3}|[kmg])?$/i.exec(s);
   let base: 2 | 8 | 16;
   let digits: string;
   if (m) {
@@ -42,7 +42,7 @@ export function parseLiteral(text: string, lang = ""): Literal | undefined {
   } else if (bareHex && /^[0-9a-f]+$/i.test(s)) {
     base = 16;
     digits = s;
-  } else if (/^0[0-7]+(?:ull|ul|ll|u|l)?$/i.test(s)) {
+  } else if (/^0[0-7]+(?:[ul]{1,3})?$/i.test(s)) {
     base = 8;                                       // C and GNU as: a leading 0 means octal
     digits = s.slice(1).replace(/[ul]+$/i, "");
   } else {

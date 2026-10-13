@@ -1,7 +1,8 @@
 import { isRegister } from "../isa/common";
 import type { AsmParser, AsmState, IsaSpec, Language, Stream, TokenKind } from "./types";
 
-const NUMBER = /^-?(?:0x[0-9a-f]+|0b[01]+|\d+(?:\.\d+)?(?:e[+-]?\d+)?)\b/i;
+// C integer suffixes (0x4000000UL) show up in .S files run through the preprocessor.
+const NUMBER = /^-?(?:0x[0-9a-f]+|0b[01]+|\d+(?:\.\d+)?(?:e[+-]?\d+)?)(?:[ul]{1,3})?\b/i;
 const PREPROC = /^#(?:include|define|undef|if|ifdef|ifndef|elif|else|endif)\b/;
 
 export function makeParser(isa: IsaSpec): AsmParser {
