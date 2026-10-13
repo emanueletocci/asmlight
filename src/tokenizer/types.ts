@@ -11,6 +11,7 @@ export interface HoverDoc {
   syntax?: string;
   operation?: string;
   notes?: string[];
+  rows?: Array<[label: string, value: string]>;  // label/value table, e.g. a number in other bases
 }
 
 /** A fence language: its tags, comment syntax and a stream tokenizer. */

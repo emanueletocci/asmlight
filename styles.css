@@ -60,6 +60,25 @@
   overflow-wrap: anywhere;
 }
 
+.asmlight-hover-rows {
+  border-collapse: collapse;
+}
+
+.asmlight-hover-rows th {
+  padding: 1px 12px 1px 0;
+  text-align: left;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+
+.asmlight-hover-value {
+  padding: 1px 0;
+  font-family: var(--font-monospace);
+  user-select: text;
+}
+
 .asmlight-hover-notes {
   margin: 6px 0 0;
   padding-left: 1.2em;
