@@ -4,7 +4,9 @@ An Obsidian plugin for low-level and embedded-systems notes. It adds:
 
 - **Syntax highlighting** for RISC-V, ARM (AArch32/Thumb and AArch64) assembly, Makefiles, GNU ld linker scripts and Devicetree source.
 - **Hover cards** that explain the instruction, register, CSR or keyword under your mouse.
+- **Disassembly highlighting** for pasted `objdump -d` and GDB `disassemble` output, with the same colors and hover cards as assembly.
 - **Register diagrams** that turn a short plain-text description into a bitfield drawing, and can decode a value for you.
+- **Memory maps** that lay out regions, peripherals and vector tables by address, so you can see what sits next to what.
 
 ![Hover card on a RISC-V CSR](docs/hover.png)
 
@@ -13,8 +15,10 @@ It works in Reading view, Live Preview and Source mode, on desktop and mobile, a
 - [Install](#install)
 - [Quick start](#quick-start)
 - [Languages](#languages)
+- [Disassembly](#disassembly)
 - [Hover cards](#hover-cards)
 - [Register diagrams](#register-diagrams)
+- [Memory maps](#memory-maps)
 - [Customizing colors](#customizing-colors)
 - [Known limitations](#known-limitations)
 - [Development](#development)
@@ -65,10 +69,32 @@ Use one of these tags after the opening ```` ``` ````. Tags are case-insensitive
 | Makefile | `makefile` `make` `mk` `mak` | GNU Make: rules, recipes, variables, functions, conditionals, `define` blocks |
 | Linker script | `linker` `ld` `lds` `linkerscript` `linker-script` | GNU ld: `MEMORY`, `SECTIONS`, region placement, symbol assignments |
 | Devicetree | `dts` `dtsi` `devicetree` `device-tree` | Nodes, labels, `&references`, properties, cells, `dt-bindings` macros, `/…/` directives |
+| Disassembly | `objdump` `disasm` `disassembly`, or `objdump-riscv` `objdump-arm` `objdump-arm64` | `objdump -d` and GDB `disassemble` output; see [Disassembly](#disassembly) |
 
 ![Devicetree highlighting](docs/devicetree.png)
 
 All three assembly languages accept GNU-style comments and directives (`#`, `//`, `/* */`, `@`, `;`, `.word`, `%hi(sym)`, `:lo12:sym`, `1f`/`1b` local labels). In assembly, an unknown first word, such as a macro or a typo, is left uncolored on purpose.
+
+## Disassembly
+
+Paste `objdump -d` (or `-dS`) output, or GDB's `disassemble`, into an `objdump` block:
+
+````markdown
+```objdump
+firmware.elf:     file format elf32-littleriscv
+
+80000000 <_start>:
+80000000:	00000297          	auipc	t0,0x0
+80000004:	02028293          	addi	t0,t0,32 # 80000020 <trap>
+```
+````
+
+![objdump output highlighted](docs/objdump.png)
+
+- **What's highlighted:** addresses, symbols (`<_start>:`, `<loop>`, `<puts@plt>`), the `Disassembly of section` line and GDB's `=>` current-PC marker. Raw instruction bytes (`02028293`, Thumb `f44f 7380`) are dimmed.
+- **Instructions** are highlighted by the RISC-V, ARM or AArch64 highlighter, so hover cards work on them too.
+- **Picking the instruction set:** the `file format …` header line decides (`elf32-littleriscv`, `elf32-littlearm`, `elf64-littleaarch64`). Without a header, the first instruction that only one ISA has (`addi`, `push`, `stp`, …) decides. To force one, use `objdump-riscv`, `objdump-arm` or `objdump-arm64`.
+- **Other lines,** such as interleaved C source from `objdump -S`, are left uncolored.
 
 ## Hover cards
 
@@ -135,6 +161,58 @@ Details:
 
 A good use: paste a value from GDB (`p/x $mcause`) or a datasheet next to the register description, and read off the decoded fields.
 
+## Memory maps
+
+A `memmap` (or `memory`, `addrmap`) block lays out an address space. Regions are sorted by address. A region inside another region is drawn inside it, with its offset. Holes between regions become a strip that says how much space is unused. This shows at a glance which peripherals are neighbours and how far apart Flash, RAM and the system area are.
+
+````markdown
+```memmap
+title: STM32F407 (subset)
+0x0800_0000  512K   FLASH   Code {rx}
+0x2000_0000  128K   SRAM    {rwx}
+0x2001_FC00         _estack Initial stack pointer
+0x4000_0000  0x8000 APB1    Peripheral bus 1
+0x4000_4400  1K     USART2  Serial port 2
+0x4000_4800  1K     USART3
+0xE000_E000..0xE000_EFFF  SCS  NVIC, SysTick
+```
+````
+
+![memmap of an STM32](docs/memmap.png)
+
+For vector tables and IRQ lines, give a `base:` (and optionally a `stride:`, default 4) and list entries by index. Skipped indices are summarised:
+
+````markdown
+```memmap
+title: Cortex-M vector table
+base: 0x0800_0000
+[0]  _estack            Initial MSP
+[1]  Reset_Handler
+[11] SVC_Handler
+[14] PendSV_Handler
+[15] SysTick_Handler
+[16] WWDG_IRQHandler    IRQ0
+```
+````
+
+![memmap of a vector table](docs/memmap-vectors.png)
+
+Each line is one of:
+
+| Line | Meaning |
+|---|---|
+| `START SIZE NAME description {attrs}` | A region. SIZE can be `0x400`, `1024`, `1K`, `512K`, `1M`, `2G` (also `KiB`, `MB`). |
+| `START..END NAME …` | A region given by its last address. |
+| `ADDRESS NAME description` | A marker for a single address (a symbol, a stack pointer, a fault address), drawn as ◀ inside its region. |
+| `[N] NAME description` | Table entry `N` at `base + N × stride`. |
+| `title:` | A heading above the map. |
+| `base:` / `stride:` | Where indexed entries start and how big each one is. |
+| `order: up` / `order: down` | High addresses at the top (default, like datasheets and stack diagrams) or at the bottom. |
+| `scale: even` / `scale: log` | All boxes the same height (default), or taller boxes for bigger regions. |
+| `# comment`, `// comment` | Ignored, also at the end of a line. |
+
+Addresses use 8 hex digits, or 16 when anything is above 4 GiB. Hovering a box shows its exact range and size. If something is wrong, an error is shown above the map: partially overlapping regions, an end below its start, a number that can't be read, or an indexed entry without `base:`.
+
 ## Customizing colors
 
 Token colors come from your theme's code colors. To change one, add a CSS snippet (**Settings → Appearance → CSS snippets**). Every highlighted token has an `asmlight-<kind>` class. The editor adds a `cm-` prefix, so target both forms:
@@ -144,15 +222,16 @@ Token colors come from your theme's code colors. To change one, add a CSS snippe
 ```
 
 - **Kinds:** `comment`, `label`, `mnemonic`, `directive`, `register`, `number`, `string`, `reloc`, `keyword`, `function`, `variable`, `operator`, `property`.
-- **Per-language rules:** tokens also have an `asmlight-lang-<id>` class (`riscv`, `arm32`, `arm64`, `makefile`, `linker`, `dts`).
+- **Per-language rules:** tokens also have an `asmlight-lang-<id>` class (`riscv`, `arm32`, `arm64`, `makefile`, `linker`, `dts`, `objdump`). Instructions inside a disassembly block carry their instruction set's id.
 - **Hover cards:** use `.asmlight-hover`.
-- **Diagrams:** use `.asmlight-regmap`. Set `--asmlight-bit-width` on it to make bit columns wider or narrower.
+- **Diagrams:** register diagrams use `.asmlight-regmap`; set `--asmlight-bit-width` on it to make bit columns wider or narrower. Memory maps use `.asmlight-memmap`.
 
 ## Known limitations
 
-- **Editor hover is untested.** Hover cards in Live Preview and Source mode rely on Obsidian keeping the plugin's classes on editor tokens. If cards show in Reading view but not in the editor, please open an issue.
+- **Tested on Obsidian 1.14.4.** Highlighting, hover cards and diagrams have been checked in Live Preview and Reading view there. Older versions should work, but haven't been tried.
 - **Symbols named like registers get register colors.** For example, a label called `time` or `control` looks like a register, because those are also CSR or Cortex-M register names.
 - **Indented Makefile lines.** Make requires a tab before recipe lines, but notes often use spaces. So any indented line after a rule is treated as a recipe.
+- **Disassembly of other architectures** (x86, …) gets addresses, bytes and symbols highlighted, but not the instructions.
 - **Coverage is focused on what courses and bare-metal code use.** Newer or rare extensions, such as the RISC-V Zv* crypto extensions or Arm SVE, aren't covered.
 
 ## Development
@@ -166,10 +245,10 @@ npm run build   # typecheck + production build
 
 Where things live:
 
-- `src/lang/`: the Makefile, linker script and Devicetree tokenizers.
+- `src/lang/`: the Makefile, linker script, Devicetree and disassembly tokenizers.
 - `src/isa/`: assembly instruction and register tables.
 - `src/docs/`: hover-card text.
-- `src/regmap/`: the diagram parser and renderer.
+- `src/regmap/` and `src/memmap/`: the register-diagram and memory-map parsers and renderers.
 
 To document a new instruction, add a row to the matching `src/docs/<isa>.ts` table. The test suite fails if any highlighted instruction or register has no hover card.
 

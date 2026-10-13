@@ -44,6 +44,13 @@ describe("hover in a highlighted block", () => {
     expect(docForElement(csr)?.tag).toBe("RISC-V CSR · 0x305");
   });
 
+  it("instructions inside an objdump block get their ISA's card", () => {
+    const code = block("objdump", "80000004:\t02028293\taddi\tt0,t0,32");
+    const addi = Array.from(code.querySelectorAll("span")).find((s) => s.textContent === "addi")!;
+    expect(addi.className).toContain("asmlight-lang-riscv");
+    expect(docForElement(addi)?.tag).toBe("RISC-V instruction");
+  });
+
   it("renders a card with escaped text", () => {
     const card = renderCard({ title: "<b>", tag: "t", summary: "s", syntax: "x", operation: "y", notes: ["n"] }, document);
     expect(card.querySelector("b")).toBeNull();

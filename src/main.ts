@@ -3,6 +3,7 @@ import { registerCm5Modes, unregisterCm5Modes } from "./adapters/cm5";
 import { highlightCodeElement, languageForCodeElement } from "./adapters/reading";
 import { HoverController } from "./hover/hover";
 import { ALL_LANGUAGES, languageForTag } from "./languages";
+import { renderMemmap } from "./memmap/render";
 import { renderRegmap } from "./regmap/render";
 import { AsmlightSettingTab, DEFAULT_SETTINGS, type AsmlightSettings } from "./settings";
 
@@ -31,6 +32,9 @@ export default class AsmlightPlugin extends Plugin {
 
     for (const tag of ["regmap", "bitfield"]) {
       this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderRegmap(source, el));
+    }
+    for (const tag of ["memmap", "memory", "addrmap"]) {
+      this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderMemmap(source, el));
     }
 
     registerCm5Modes((window as any).CodeMirror, ALL_LANGUAGES);
