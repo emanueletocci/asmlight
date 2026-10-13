@@ -58,6 +58,8 @@ export interface Parser<S> {
   startState(): S;
   copyState(s: S): S;
   token(stream: Stream, state: S): TokenKind | null;
+  /** Language id for the token just returned, when it differs from the block's (objdump → riscv). */
+  tokenLang?(state: S): string | undefined;
 }
 
 export type AsmParser = Parser<AsmState>;

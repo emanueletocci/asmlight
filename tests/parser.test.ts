@@ -79,6 +79,10 @@ describe("lossless round-trip", () => {
     arm64: "_main:\n\tmov x0, #0x10 // żółć\n\t.ascii \"oops\n/* x\n y */ ret",
     makefile: "CC := gcc # ç\nall: $(OBJ) \\\n\tmain.o\n\t@echo \"oops\n\techo 'x\ndefine X =\n$(Y\nendef\n",
     linker: "MEMORY { FLASH (rx) : ORIGIN = 0x0, LENGTH = 64K }\n/* ü\n x */ .text : { *(.text*) } > FLASH\n\"oops",
+    objdump: "fw.elf:     file format elf32-littleriscv\n\nDisassembly of section .text:\n\n80000000 <_start>:\n80000000:\t00000297          \tauipc\tt0,0x0 # é\n\t...\n=> 0x80 <+4>:\tret",
+    "objdump-riscv": "80000004:\t02028293\taddi t0,t0,32 /* x\n y */ ret\n  int x; // src",
+    "objdump-arm": " 8000134:\tf44f 7380 \tmov.w\tr3, #256\t@ 0x100\n 800013a:\tf000 f805 \tbl\t8000148 <delay>",
+    "objdump-arm64": "  400590:\t97ffffb0 \tbl\t400450 <puts@plt>\n0000000000400580 <main>:",
     dts: "/dts-v1/;\n/ { ü: n@1 { reg = <0x0\n 1>; s = \"oops\n}; /* c\n */ };\nb = [00 1",
   };
   for (const lang of ALL_LANGUAGES) {
