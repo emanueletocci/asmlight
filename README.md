@@ -112,6 +112,9 @@ Hover over any highlighted word to see a short explanation. Some examples:
 | `$@`, `$(patsubst`, `?=`, `.PHONY` | Make automatic variables, functions, operators and special targets |
 | `KEEP`, `LOADADDR`, `AT`, `.` | Linker script commands, functions and the location counter |
 | `interrupts`, `reg`, `reset-gpios` | Devicetree property meaning and format |
+| `0xFFFFF000`, `0b1010`, `#0x1f`, `0755` | The value as unsigned and signed decimal, hex, binary, octal, and ASCII when printable |
+
+![Hover cards on hex literals](docs/hover-number.png)
 
 Options are under **Settings → Asmlight**:
 

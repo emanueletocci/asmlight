@@ -1,5 +1,6 @@
 import { languageById } from "../languages";
 import type { HoverDoc, TokenKind } from "../tokenizer/types";
+import { describeNumber } from "./number";
 
 const KINDS: ReadonlySet<string> = new Set<TokenKind>([
   "comment", "label", "mnemonic", "directive", "register", "number", "string", "reloc",
@@ -24,6 +25,7 @@ export function docForElement(el: Element): HoverDoc | undefined {
   const info = parseTokenClasses(Array.from(el.classList));
   const text = el.textContent?.trim();
   if (!info || !text) return undefined;
+  if (info.kind === "number") return describeNumber(text, info.lang);
   return languageById(info.lang)?.describe?.(text, info.kind);
 }
 
@@ -38,7 +40,17 @@ export function renderCard(doc: HoverDoc, d: Document): HTMLElement {
   card.setAttribute("role", "tooltip");
   const head = el("div", "asmlight-hover-head");
   head.append(el("code", "asmlight-hover-title", doc.title), el("span", "asmlight-hover-tag", doc.tag));
-  card.append(head, el("div", "asmlight-hover-summary", doc.summary));
+  card.append(head);
+  if (doc.summary) card.append(el("div", "asmlight-hover-summary", doc.summary));
+  if (doc.rows?.length) {
+    const table = el("table", "asmlight-hover-rows");
+    for (const [label, value] of doc.rows) {
+      const tr = el("tr", "");
+      tr.append(el("th", "asmlight-hover-label", label), el("td", "asmlight-hover-value", value));
+      table.append(tr);
+    }
+    card.append(table);
+  }
   for (const [label, body] of [["Syntax", doc.syntax], ["Operation", doc.operation]] as const) {
     if (!body) continue;
     const block = el("div", "asmlight-hover-block");
