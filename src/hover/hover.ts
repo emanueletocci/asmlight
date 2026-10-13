@@ -7,8 +7,12 @@ const KINDS: ReadonlySet<string> = new Set<TokenKind>([
   "keyword", "function", "variable", "operator", "property",
 ]);
 
-/** Matches token spans in Reading view (`asmlight-…`) and the editor (`cm-asmlight-…`). */
-export const TOKEN_SELECTOR = '[class*="asmlight-lang-"]';
+const ASMLIGHT_SELECTOR = '[class*="asmlight-lang-"]';
+/** Numbers highlighted by Obsidian itself in other code blocks (C, …): Prism in Reading view, CodeMirror in the editor. */
+const NUMBER_SELECTOR = "pre .token.number, .HyperMD-codeblock .cm-number";
+
+/** Matches token spans in Reading view (`asmlight-…`) and the editor (`cm-asmlight-…`), plus other blocks' numbers. */
+export const TOKEN_SELECTOR = `${ASMLIGHT_SELECTOR}, ${NUMBER_SELECTOR}`;
 
 export function parseTokenClasses(classes: Iterable<string>): { kind: TokenKind; lang: string } | undefined {
   let kind: TokenKind | undefined;
@@ -24,7 +28,8 @@ export function parseTokenClasses(classes: Iterable<string>): { kind: TokenKind;
 export function docForElement(el: Element): HoverDoc | undefined {
   const info = parseTokenClasses(Array.from(el.classList));
   const text = el.textContent?.trim();
-  if (!info || !text) return undefined;
+  if (!text) return undefined;
+  if (!info) return el.matches(NUMBER_SELECTOR) ? describeNumber(text, "c") : undefined;
   if (info.kind === "number") return describeNumber(text, info.lang);
   return languageById(info.lang)?.describe?.(text, info.kind);
 }

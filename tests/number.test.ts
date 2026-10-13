@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, afterEach } from "vitest";
 import { describeNumber } from "../src/hover/number";
-import { docForElement, renderCard } from "../src/hover/hover";
+import { docForElement, renderCard, TOKEN_SELECTOR } from "../src/hover/hover";
 import { highlightCodeElement } from "../src/adapters/reading";
 import { languageForTag } from "../src/languages";
 
@@ -33,6 +33,9 @@ describe("describeNumber", () => {
     expect(describeNumber("089")).toBeUndefined();
     expect(rows("#0x10").Unsigned).toBe("16");
     expect(rows("0x10UL").Unsigned).toBe("16");
+    for (const t of ["0x4000000UL", "0x4000000ul", "0x4000000ULL", "0x4000000LLU", "0x4000000u", "0x4000000L"]) {
+      expect(rows(t, "c").Unsigned).toBe("67,108,864");
+    }
     const neg = rows("-0x10");
     expect(neg["Signed (i8)"]).toBe("-16");
     expect(neg.Hex).toBe("0xf0");
@@ -76,5 +79,34 @@ describe("number hover in a block", () => {
     expect(card.querySelector(".asmlight-hover-summary")).toBeNull();
     const cells = Array.from(card.querySelectorAll(".asmlight-hover-rows tr")).map((tr) => tr.textContent);
     expect(cells).toContain("Signed (i32)-2,147,483,648");
+  });
+});
+
+describe("numbers in other code blocks", () => {
+  afterEach(() => { document.body.replaceChildren(); });
+
+  it("Reading view: Prism-highlighted C numbers, suffixes included", () => {
+    document.body.innerHTML = '<pre><code class="language-c">#define RAM <span class="token number">0x4000000UL</span> + <span class="token number">42</span></code></pre>';
+    const [hex, dec] = Array.from(document.querySelectorAll(".token.number"));
+    expect(hex.matches(TOKEN_SELECTOR)).toBe(true);
+    expect(docForElement(hex)?.tag).toBe("Number · 32-bit");
+    expect(docForElement(dec)).toBeUndefined();
+  });
+
+  it("Live Preview: CodeMirror-highlighted numbers in code block lines only", () => {
+    document.body.innerHTML = '<div class="HyperMD-codeblock"><span class="cm-number">0b1010</span></div><div class="cm-line"><span class="cm-number">0xff</span></div>';
+    const [inBlock, outside] = Array.from(document.querySelectorAll(".cm-number"));
+    expect(docForElement(inBlock)?.rows).toContainEqual(["Unsigned", "10"]);
+    expect(outside.closest(TOKEN_SELECTOR)).toBeNull();
+  });
+
+  it("asm blocks tokenize C-suffixed literals as one number", () => {
+    const code = document.createElement("code");
+    code.textContent = "li t0, 0x4000000UL";
+    document.body.append(code);
+    highlightCodeElement(code, languageForTag("riscv")!);
+    const num = Array.from(code.querySelectorAll("span")).find((s) => s.textContent === "0x4000000UL")!;
+    expect(num.className).toContain("asmlight-number");
+    expect(docForElement(num)?.rows).toContainEqual(["Unsigned", "67,108,864"]);
   });
 });
