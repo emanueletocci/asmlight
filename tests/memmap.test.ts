@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from "vitest";
+import "./setup-dom";
 import { formatAddr, formatSize, layout, parseMemmap, parseSize, type LayoutItem } from "../src/memmap/parse";
 import { renderMemmap } from "../src/memmap/render";
 
@@ -132,7 +133,7 @@ describe("renderMemmap", () => {
     const names = Array.from(el.querySelectorAll(".asmlight-memmap-name")).map((n) => n.textContent);
     expect(names).toEqual(["A", "B"]);
     const boxes = Array.from(el.querySelectorAll<HTMLElement>(".asmlight-memmap-box"));
-    expect(boxes.map((b) => b.style.minHeight)).toEqual(["2.20em", "5.70em"]);
+    expect(boxes.map((b) => b.style.getPropertyValue("--asmlight-log-height"))).toEqual(["2.20em", "5.70em"]);
   });
 
   it("errors, empty hint, and no markup injection", () => {

@@ -60,6 +60,6 @@ export function asmLanguage(isa: IsaSpec): Language {
     makeParser: () => makeParser(isa),
     lineComment: isa.lineComments[0],
     blockComment: ["/*", "*/"],
-    describe: isa.describe,
+    describe: isa.describe?.bind(isa),
   };
 }

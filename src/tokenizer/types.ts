@@ -19,7 +19,7 @@ export interface Language {
   id: string;
   name: string;                          // shown in Obsidian's code block language label
   aliases: string[];
-  makeParser(): Parser<any>;
+  makeParser(): Parser<unknown>;
   lineComment?: string;
   blockComment?: [string, string];
   /** Hover card for a token, given its exact text and kind. */

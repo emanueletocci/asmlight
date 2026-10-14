@@ -1,11 +1,19 @@
 import { loadPrism, MarkdownView, Plugin } from "obsidian";
-import { registerCm5Modes, unregisterCm5Modes } from "./adapters/cm5";
+import { registerCm5Modes, unregisterCm5Modes, type Cm5Like } from "./adapters/cm5";
 import { highlightCodeElement, languageForCodeElement } from "./adapters/reading";
 import { HoverController } from "./hover/hover";
 import { ALL_LANGUAGES, languageForTag } from "./languages";
 import { renderMemmap } from "./memmap/render";
 import { renderRegmap } from "./regmap/render";
 import { AsmlightSettingTab, DEFAULT_SETTINGS, type AsmlightSettings } from "./settings";
+
+/** Globals Obsidian puts on window that aren't in its public typings. */
+function globals() {
+  return window as unknown as {
+    CodeMirror?: Cm5Like;
+    Prism?: { hooks?: { all?: Record<string, unknown[]> } };
+  };
+}
 
 type PrismEnv = { element: HTMLElement; language: string };
 
@@ -37,7 +45,7 @@ export default class AsmlightPlugin extends Plugin {
       this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderMemmap(source, el));
     }
 
-    registerCm5Modes((window as any).CodeMirror, ALL_LANGUAGES);
+    registerCm5Modes(globals().CodeMirror, ALL_LANGUAGES);
     // Editor highlighting must not depend on Prism loading.
     this.app.workspace.updateOptions();
     this.app.workspace.onLayoutReady(() => {
@@ -52,7 +60,7 @@ export default class AsmlightPlugin extends Plugin {
       });
     });
 
-    const Prism = await loadPrism();
+    const Prism = (await loadPrism()) as { hooks: { add(name: string, cb: (env: PrismEnv) => void): void } };
     if (this.unloaded) return;
     Prism.hooks.add("after-highlight", this.prismHook);
 
@@ -103,9 +111,9 @@ export default class AsmlightPlugin extends Plugin {
   onunload() {
     this.unloaded = true;
     for (const h of this.hovers.splice(0)) h.destroy();
-    unregisterCm5Modes((window as any).CodeMirror, ALL_LANGUAGES);
+    unregisterCm5Modes(globals().CodeMirror, ALL_LANGUAGES);
 
-    const hooks: unknown[] | undefined = (window as any).Prism?.hooks?.all?.["after-highlight"];
+    const hooks: unknown[] | undefined = globals().Prism?.hooks?.all?.["after-highlight"];
     const i = hooks?.indexOf(this.prismHook) ?? -1;
     if (hooks && i >= 0) hooks.splice(i, 1);
 

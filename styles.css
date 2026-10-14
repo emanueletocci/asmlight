@@ -2,6 +2,8 @@
 
 .asmlight-hover {
   position: fixed;
+  left: var(--asmlight-hover-left, 0);
+  top: var(--asmlight-hover-top, 0);
   z-index: var(--layer-tooltip, 60);
   max-width: min(440px, calc(100vw - 16px));
   padding: 8px 10px;
@@ -14,6 +16,10 @@
   font-size: var(--font-ui-small, 13px);
   line-height: 1.45;
   pointer-events: none;
+}
+
+.asmlight-hover.is-measuring {
+  visibility: hidden;
 }
 
 .asmlight-hover-head {
@@ -128,6 +134,7 @@
 
 .asmlight-regmap-grid {
   display: grid;
+  grid-template-columns: repeat(var(--asmlight-bits, 32), minmax(var(--asmlight-bit-width), 1fr));
   min-width: max-content;
   margin-bottom: 0.6em;
   padding-left: 1px;           /* room for the first field's -1px overlap */
@@ -136,6 +143,7 @@
 }
 
 .asmlight-regmap-bitno {
+  grid-row: 1;
   text-align: center;
   font-size: 0.68em;
   color: var(--text-faint);
@@ -143,6 +151,8 @@
 }
 
 .asmlight-regmap-field {
+  grid-row: 2;
+  grid-column: span var(--asmlight-span, 1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -183,6 +193,7 @@
 }
 
 .asmlight-regmap-bit {
+  grid-row: 3;
   text-align: center;
   font-size: 0.75em;
   color: var(--text-faint);
@@ -289,12 +300,12 @@
   border: 1px solid var(--background-modifier-border-hover, var(--background-modifier-border));
   background: var(--background-secondary);
   padding: 0.35em 0.6em;
-  min-height: 2.2em;
+  min-height: var(--asmlight-log-height, 2.2em);
   margin-top: -1px;              /* contiguous regions share an edge */
 }
 
 .asmlight-memmap-row.is-entry .asmlight-memmap-box {
-  min-height: 0;
+  min-height: var(--asmlight-log-height, 0);
   padding: 0.15em 0.6em;
 }
 

@@ -37,18 +37,16 @@ function renderRegister(reg: Register, el: Make): HTMLElement {
     const top = row[0].hi;
     const bits = top - row[row.length - 1].lo + 1;
     const grid = el("div", "asmlight-regmap-grid");
-    grid.style.gridTemplateColumns = `repeat(${bits}, minmax(var(--asmlight-bit-width), 1fr))`;
+    grid.setCssProps({ "--asmlight-bits": String(bits) });
     for (let b = top; b > top - bits; b--) {
       const n = el("div", "asmlight-regmap-bitno", String(b));
-      n.style.gridRow = "1";
       grid.append(n);
     }
     for (const seg of row) {
       const span = seg.hi - seg.lo + 1;
       const f = seg.field;
       const cell = el("div", `asmlight-regmap-field${!f ? " is-gap" : f.reserved ? " is-reserved" : ""}`);
-      cell.style.gridRow = "2";
-      cell.style.gridColumn = `span ${span}`;
+      cell.setCssProps({ "--asmlight-span": String(span) });
       if (f) {
         if (f.name !== "-") {
           const label = el("span", "asmlight-regmap-label", f.name);
@@ -65,7 +63,6 @@ function renderRegister(reg: Register, el: Make): HTMLElement {
       for (let b = top; b > top - bits; b--) {
         const bit = fieldValue(reg.value, b, b);
         const v = el("div", `asmlight-regmap-bit${bit ? " is-set" : ""}`, bit.toString());
-        v.style.gridRow = "3";
         grid.append(v);
       }
     }

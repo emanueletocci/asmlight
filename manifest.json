@@ -3,7 +3,7 @@
   "name": "Asmlight",
   "version": "0.4.0",
   "minAppVersion": "1.5.0",
-  "description": "Highlighting and hover docs for RISC-V and ARM assembly, disassembly, Makefiles, linker scripts and Devicetree, plus register and memory map diagrams.",
+  "description": "Highlight and explain RISC-V and ARM assembly, disassembly, Makefiles, linker scripts and Devicetree, and draw register and memory map diagrams.",
   "author": "mecilh",
   "isDesktopOnly": false
 }

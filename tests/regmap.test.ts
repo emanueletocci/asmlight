@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from "vitest";
+import "./setup-dom";
 import { fieldValue, formatValue, layoutRows, parseNumber, parseRegmap } from "../src/regmap/parse";
 import { renderRegmap } from "../src/regmap/render";
 
@@ -86,8 +87,8 @@ describe("renderRegmap", () => {
     expect(bitnos[0]).toBe("31");
     expect(bitnos[31]).toBe("0");
     const fields = Array.from(el.querySelectorAll<HTMLElement>(".asmlight-regmap-field"));
-    expect(fields.map((f) => [f.textContent, f.style.gridColumn])).toEqual([
-      ["", "span 19"], ["MPP", "span 2"], ["", "span 3"], ["MPIE", "span 1"], ["", "span 3"], ["MIE", "span 1"], ["", "span 3"],
+    expect(fields.map((f) => [f.textContent, f.style.getPropertyValue("--asmlight-span")])).toEqual([
+      ["", "19"], ["MPP", "2"], ["", "3"], ["MPIE", "1"], ["", "3"], ["MIE", "1"], ["", "3"],
     ]);
     expect(fields[3].querySelector(".is-vertical")).not.toBeNull();
     expect(el.querySelectorAll(".asmlight-regmap-bit.is-set")).toHaveLength(4);

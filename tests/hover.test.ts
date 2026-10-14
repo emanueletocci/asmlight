@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, afterEach } from "vitest";
+import "./setup-dom";
 import { docForElement, HoverController, parseTokenClasses, placeCard, renderCard } from "../src/hover/hover";
 import { highlightCodeElement } from "../src/adapters/reading";
 import { languageForTag } from "../src/languages";

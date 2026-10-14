@@ -41,7 +41,7 @@ function renderRegion(r: MemRegion, map: MemMap, el: Make, parent?: MemRegion): 
 
   const box = el("div", "asmlight-memmap-box");
   box.title = `${r.name}: ${formatAddr(r.start, map.digits)} – ${formatAddr(last, map.digits)} (${formatSize(r.end - r.start)})`;
-  if (map.scale === "log" && !r.children.length) box.style.minHeight = logHeight(r.end - r.start);
+  if (map.scale === "log" && !r.children.length) box.setCssProps({ "--asmlight-log-height": logHeight(r.end - r.start) });
 
   const head = el("div", "asmlight-memmap-head");
   if (r.index !== undefined) head.append(el("span", "asmlight-memmap-index", `[${r.index}]`));
