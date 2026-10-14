@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, afterEach } from "vitest";
+import "./setup-dom";
 import { describeNumber } from "../src/hover/number";
 import { docForElement, renderCard, TOKEN_SELECTOR } from "../src/hover/hover";
 import { highlightCodeElement } from "../src/adapters/reading";

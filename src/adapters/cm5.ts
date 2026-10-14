@@ -5,8 +5,8 @@ export function toCm5Mode(lang: Language) {
   const parser = lang.makeParser();
   return {
     name: lang.id,
-    startState: parser.startState,
-    copyState: parser.copyState,
+    startState: () => parser.startState(),
+    copyState: (state: unknown) => parser.copyState(state),
     token(stream: Stream, state: unknown): string | null {
       const kind = parser.token(stream, state);
       if (!kind) return null;

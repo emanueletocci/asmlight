@@ -29,7 +29,7 @@ const RESERVED = new Set(["-", "0", "1", "res0", "res1", "reserved", "rsvd", "wp
 // `name: width [/ perRow] [= value] [caption]`, name may be quoted to allow spaces
 const HEADER = /^(?:"([^"]+)"|([^\s:"]+)):\s*(\d+)(?:\s*\/\s*(\d+))?(?:\s*=\s*(\S+))?(?:\s+(.*))?$/;
 // `NAME hi[:lo] [description] [{0: A, 1: B}]`, bit range may be bracketed
-const FIELD = /^(\S+)\s+\[?(\d+)(?:\s*[:\-]\s*(\d+))?\]?(?:\s+(.*))?$/;
+const FIELD = /^(\S+)\s+\[?(\d+)(?:\s*[:-]\s*(\d+))?\]?(?:\s+(.*))?$/;
 const VALUE = /^=\s*(\S+)\s*$/;
 
 export function parseNumber(text: string): bigint | undefined {

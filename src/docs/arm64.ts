@@ -266,7 +266,7 @@ function describeRegister(word: string): HoverDoc | undefined {
   if (m && Number(m[2]) <= 31) {
     const n = Number(m[2]);
     const abi = n <= 7 ? "argument / result (caller-saved)" : n <= 15 ? "callee-saved (low 64 bits only)" : "temporary (caller-saved)";
-    const notes = arrangement ? [`.${arrangement[1]}: ${arrangement[1].replace(/^(\d+)(\w)$/, (_, c, t) => `${c} lanes of ${VIEWS[t]}`).replace(/^([bhsdq])$/, (t) => `one ${VIEWS[t]} element`)}`] : undefined;
+    const notes = arrangement ? [`.${arrangement[1]}: ${arrangement[1].replace(/^(\d+)(\w)$/, (_: string, c: string, t: string) => `${c} lanes of ${VIEWS[t]}`).replace(/^([bhsdq])$/, (t) => `one ${VIEWS[t]} element`)}`] : undefined;
     return m[1] === "v"
       ? reg("ARM SIMD/FP register", `v${n}: 128-bit SIMD & FP register, ${abi}`, notes)
       : reg("ARM SIMD/FP register", `${m[1]}${n}: ${VIEWS[m[1]]} view of v${n}, ${abi}`);

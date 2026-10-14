@@ -139,13 +139,12 @@ export class HoverController {
       if (!doc) return;
       this.removeCard();
       const card = renderCard(doc, this.doc);
-      card.style.visibility = "hidden";
+      card.classList.add("is-measuring");
       this.doc.body.append(card);
       const r = token.getBoundingClientRect();
       const pos = placeCard(r, { width: card.offsetWidth, height: card.offsetHeight }, { width: win.innerWidth, height: win.innerHeight });
-      card.style.left = `${pos.left}px`;
-      card.style.top = `${pos.top}px`;
-      card.style.visibility = "";
+      card.setCssProps({ "--asmlight-hover-left": `${pos.left}px`, "--asmlight-hover-top": `${pos.top}px` });
+      card.classList.remove("is-measuring");
       this.card = card;
     }, delay);
   }
