@@ -66,6 +66,19 @@ describe("registerCm5Modes", () => {
 });
 
 describe("unregisterCm5Modes", () => {
+  it("puts back CodeMirror's own modes it replaced (verilog, vhdl)", () => {
+    const verilog = { name: "Verilog", mime: "text/x-verilog", mode: "verilog" };
+    const CM = fakeCM([verilog]);
+    const builtin = () => "builtin";
+    CM.modes.verilog = builtin;
+    registerCm5Modes(CM, ALL_LANGUAGES);
+    expect(CM.modes.verilog).not.toBe(builtin);
+    expect(CM.findModeByName("sv").mode).toBe("verilog");
+    unregisterCm5Modes(CM, ALL_LANGUAGES);
+    expect(CM.modes.verilog).toBe(builtin);
+    expect(CM.modes.vhdl).toBeUndefined();
+  });
+
   it("removes exactly what was added", () => {
     const other = { name: "Other", mime: "text/x-o", mode: "o", alias: ["o"] };
     const CM = fakeCM([other]);

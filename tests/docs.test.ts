@@ -6,6 +6,11 @@ import { docTable } from "../src/docs/table";
 import { describeMake } from "../src/docs/make";
 import { describeLinker } from "../src/docs/linker";
 import { describeDevicetree } from "../src/docs/devicetree";
+import { describeVerilog } from "../src/docs/verilog";
+import { describeVhdl } from "../src/docs/vhdl";
+import { describeConstraint } from "../src/docs/constraints";
+import * as cons from "../src/lang/constraints";
+import * as vhdl from "../src/lang/vhdl";
 import type { HoverDoc, IsaSpec } from "../src/tokenizer/types";
 
 const d = (isa: IsaSpec, w: string, kind: "mnemonic" | "register" = "mnemonic"): HoverDoc | undefined => isa.describe!(w, kind);
@@ -157,5 +162,38 @@ describe("Make, linker and devicetree lookups", () => {
     expect(describeDevicetree("/dts-v1/", "keyword")?.summary).toMatch(/version 1/);
     expect(describeDevicetree("chosen", "function")?.summary).toMatch(/bootloader/);
     expect(describeDevicetree("GIC_SPI", "variable")?.summary).toMatch(/INTID − 32/);
+  });
+});
+
+describe("FPGA lookups", () => {
+  it("verilog", () => {
+    expect(describeVerilog("always_ff", "keyword")?.summary).toMatch(/flip-flops/);
+    expect(describeVerilog("<=", "operator")?.summary).toMatch(/Nonblocking/);
+    expect(describeVerilog("##", "operator")?.summary).toMatch(/cycle delay/);
+    expect(describeVerilog("##3", "operator")?.summary).toMatch(/cycle delay/);
+    expect(describeVerilog("$clog2", "function")?.summary).toMatch(/log2/);
+    expect(describeVerilog("`timescale", "directive")?.syntax).toMatch(/1ns/);
+    expect(describeVerilog('(* keep = "true" *)', "directive")?.tag).toBe("Attribute");
+    expect(describeVerilog("`MY_MACRO", "directive")).toBeUndefined();
+  });
+  it("vhdl, case-insensitive", () => {
+    expect(describeVhdl("PROCESS", "keyword")?.summary).toMatch(/sensitivity list/);
+    expect(describeVhdl("std_logic", "keyword")?.summary).toMatch(/9 values/);
+    expect(describeVhdl("rising_edge", "function")?.summary).toMatch(/0→1/);
+    expect(describeVhdl("'event", "property")?.summary).toMatch(/changed/);
+    expect(describeVhdl("<=", "operator")?.summary).toMatch(/delta cycle/);
+  });
+  it("constraints", () => {
+    expect(describeConstraint("create_clock", "keyword")?.syntax).toMatch(/-period/);
+    expect(describeConstraint("set", "keyword")?.tag).toBe("Tcl command");
+    expect(describeConstraint("get_ports", "function")?.summary).toMatch(/ports/);
+    expect(describeConstraint("IOSTANDARD", "property")?.summary).toMatch(/bank voltage/);
+    expect(describeConstraint("-waveform", "directive")?.summary).toMatch(/duty/);
+  });
+  it("every highlighted constraint command, query and VHDL function has a card", () => {
+    expect([...cons.COMMANDS].filter((c) => !describeConstraint(c, "keyword"))).toEqual([]);
+    expect([...cons.QUERIES].filter((c) => !describeConstraint(c, "function"))).toEqual([]);
+    expect([...vhdl.FUNCTIONS].filter((f) => !describeVhdl(f, "function"))).toEqual([]);
+    expect([...vhdl.TYPES].filter((t) => !describeVhdl(t, "keyword"))).toEqual([]);
   });
 });

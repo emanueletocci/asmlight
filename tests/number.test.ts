@@ -60,6 +60,21 @@ describe("describeNumber", () => {
     expect(describeNumber("0b102")).toBeUndefined();
   });
 
+  it("Verilog and VHDL literals use their written width", () => {
+    expect(describeNumber("8'hFF", "verilog")?.tag).toBe("Number · 8-bit");
+    expect(rows("8'hFF", "verilog")["Signed (i8)"]).toBe("-1");
+    expect(rows("12'hfff", "verilog")).toMatchObject({ "Signed (i12)": "-1", Hex: "0xfff", Binary: "1111 1111 1111" });
+    expect(rows("'b1010", "verilog").Unsigned).toBe("10");
+    expect(rows("32'hdead_beef", "verilog").Hex).toBe("0xdead_beef");
+    expect(describeNumber("4'b10x1", "verilog")).toBeUndefined();
+    expect(describeNumber("8'd255", "verilog")).toBeUndefined();
+    expect(rows('x"FF"', "vhdl").Unsigned).toBe("255");
+    expect(describeNumber('12ux"FFF"', "vhdl")?.tag).toBe("Number · 12-bit");
+    expect(rows("16#FF#", "vhdl").Unsigned).toBe("255");
+    expect(rows("2#1010#", "vhdl").Unsigned).toBe("10");
+    expect(describeNumber("0xff", "verilog")).toBeUndefined();
+  });
+
   it("very wide literals still get decimal and hex", () => {
     expect(rows("0x1" + "0".repeat(16)).Decimal).toBe("18446744073709551616");
   });
