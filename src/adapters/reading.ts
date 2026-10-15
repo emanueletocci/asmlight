@@ -12,16 +12,13 @@ export function languageForCodeElement(code: HTMLElement): Language | undefined 
 
 /** Idempotent: always rebuilds from textContent, so re-running (or running after Prism) is safe. */
 export function highlightCodeElement(code: HTMLElement, lang: Language): void {
-  const frag = document.createDocumentFragment();
-  tokenizeLines(code.textContent ?? "", lang).forEach((tokens, i) => {
-    if (i > 0) frag.append("\n");
+  const lines = tokenizeLines(code.textContent ?? "", lang);
+  code.empty();
+  lines.forEach((tokens, i) => {
+    if (i > 0) code.appendText("\n");
     for (const t of tokens) {
-      if (!t.kind) { frag.append(t.text); continue; }
-      const span = document.createElement("span");
-      span.className = `token ${PRISM_CLASS[t.kind]} asmlight-${t.kind} asmlight-lang-${t.lang}`;
-      span.textContent = t.text;
-      frag.append(span);
+      if (!t.kind) code.appendText(t.text);
+      else code.createSpan({ cls: `token ${PRISM_CLASS[t.kind]} asmlight-${t.kind} asmlight-lang-${t.lang}`, text: t.text });
     }
   });
-  code.replaceChildren(frag);
 }
