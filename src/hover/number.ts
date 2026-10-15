@@ -12,6 +12,26 @@ interface Literal {
   base: 2 | 8 | 16;
   digits: number;    // written digit count, used to pick the display width
   shift: number;     // linker K/M/G suffix
+  bits?: number;     // HDL literal with an explicit width: 8'hff, 12x"fff"
+}
+
+const BASES = { b: 2, o: 8, x: 16, h: 16 } as const;
+
+/** Verilog `8'hff` / `'b1010` and VHDL `x"ff"` / `12ux"fff"` / `16#ff#`. Decimal and X/Z digits are not shown. */
+function parseHdl(s: string, lang: string): Literal | undefined {
+  s = s.replace(/_/g, "");
+  const m = lang === "verilog" ? /^(\d*)'s?([boh])([0-9a-f]+)$/i.exec(s)
+    : /^(\d*)[us]?([box])"([0-9a-f]+)"$/i.exec(s) ?? /^()(2|8|16)#([0-9a-f]+)#$/i.exec(s);
+  if (!m) return undefined;
+  const base = (/^\d+$/.test(m[2]) ? Number(m[2]) : BASES[m[2].toLowerCase() as keyof typeof BASES]) as 2 | 8 | 16;
+  const valid = base === 16 ? /^[0-9a-f]+$/i : base === 8 ? /^[0-7]+$/ : /^[01]+$/;
+  if (!valid.test(m[3])) return undefined;
+  const size = m[1] ? Number(m[1]) : undefined;
+  const prefix = base === 16 ? "0x" : base === 8 ? "0o" : "0b";
+  return {
+    value: BigInt(prefix + m[3]), negative: false, base, digits: m[3].length, shift: 0,
+    bits: size && size <= 64 ? size : undefined,
+  };
 }
 
 /**
@@ -20,6 +40,7 @@ interface Literal {
  * K/M/G. Objdump addresses and devicetree unit addresses are hex without a prefix.
  */
 export function parseLiteral(text: string, lang = ""): Literal | undefined {
+  if (lang === "verilog" || lang === "vhdl") return parseHdl(text.trim(), lang);
   let s = text.trim().replace(/^#/, "");
   let bareHex = lang.startsWith("objdump");
   if (lang === "devicetree" && s.startsWith("@")) { s = s.slice(1); bareHex = true; }
@@ -81,7 +102,7 @@ export function describeNumber(text: string, lang = ""): HoverDoc | undefined {
   // Width: what the literal was written as (0x00ff is 16-bit), widened to fit the value.
   const writtenBits = lit.shift ? 0 : lit.digits * (lit.base === 16 ? 4 : lit.base === 8 ? 3 : 1);
   const needed = lit.negative ? (magnitude - ONE).toString(2).length + 1 : magnitude.toString(2).length;
-  const width = WIDTHS.find((w) => w >= Math.max(writtenBits, needed));
+  const width = lit.bits ?? WIDTHS.find((w) => w >= Math.max(writtenBits, needed));
 
   const rows: Array<[string, string]> = [];
   if (width === undefined) {
@@ -99,7 +120,7 @@ export function describeNumber(text: string, lang = ""): HoverDoc | undefined {
 
   rows.push(["Unsigned", group(bits.toString(10), 3, ",")]);
   rows.push([`Signed (i${width})`, (signed < ZERO ? "-" : "") + group((signed < ZERO ? -signed : signed).toString(10), 3, ",")]);
-  rows.push(["Hex", "0x" + group(pad(bits.toString(16), width / 4), 4, "_")]);
+  rows.push(["Hex", "0x" + group(pad(bits.toString(16), Math.ceil(width / 4)), 4, "_")]);
   rows.push(["Binary", group(pad(bits.toString(2), width), 4, " ")]);
   rows.push(["Octal", "0o" + bits.toString(8)]);
   const chars = ascii(bits, width);

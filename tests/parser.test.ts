@@ -83,6 +83,12 @@ describe("lossless round-trip", () => {
     "objdump-riscv": "80000004:\t02028293\taddi t0,t0,32 /* x\n y */ ret\n  int x; // src",
     "objdump-arm": " 8000134:\tf44f 7380 \tmov.w\tr3, #256\t@ 0x100\n 800013a:\tf000 f805 \tbl\t8000148 <delay>",
     "objdump-arm64": "  400590:\t97ffffb0 \tbl\t400450 <puts@plt>\n0000000000400580 <main>:",
+    verilog: "module m (input logic c); // ü\n  (* keep *) always_ff @(posedge c) q <= 8'hF_F; /* x\n y */ $display(\"oops\n`define W 8\nendmodule : m\n\\esc ",
+    vhdl: "entity e is -- ü\n  port (c : in std_logic);\nend entity e;\nq <= x\"F; s <= '0'; t := c'event /* x\n y */ 16#F",
+    xdc: "set_property -dict { PACKAGE_PIN W5 } [get_ports {led[0]}] ;# ü\ncreate_clock -period 10 \\\n  [get_ports clk] \"oops",
+    sdc: "set p ${x}; create_clock -period $p [get_ports clk\nset_false_path -from [",
+    pcf: "set_io -nowarn clk 35 # ü\nset_frequency clk 12.5",
+    qsf: "set_global_assignment -name FAMILY \"Cyclone V\"\nset_location_assignment PIN_A1 -to x[0] # é",
     dts: "/dts-v1/;\n/ { ü: n@1 { reg = <0x0\n 1>; s = \"oops\n}; /* c\n */ };\nb = [00 1",
   };
   for (const lang of ALL_LANGUAGES) {

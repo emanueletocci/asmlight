@@ -29,12 +29,19 @@ export interface Cm5Like {
 
 const mimeFor = (lang: Language) => `text/x-asmlight-${lang.id}`;
 
+/** Modes we replaced (CodeMirror ships verilog and vhdl), put back on unload. */
+const replaced = new Map<string, unknown>();
+
 /** Registers modes under every tag, plus modeInfo so findModeByName resolves any case. */
 export function registerCm5Modes(CM: Cm5Like | undefined, langs: readonly Language[]): void {
   if (!CM) return;
   for (const lang of langs) {
     const tags = [lang.id, ...lang.aliases];
-    for (const tag of tags) CM.defineMode?.(tag, () => toCm5Mode(lang));
+    for (const tag of tags) {
+      const prev = CM.modes?.[tag];
+      if (prev !== undefined && !replaced.has(tag)) replaced.set(tag, prev);
+      CM.defineMode?.(tag, () => toCm5Mode(lang));
+    }
     CM.defineMIME?.(mimeFor(lang), lang.id);
     if (Array.isArray(CM.modeInfo)) {
       const taken = new Set<string>();
@@ -55,7 +62,12 @@ export function registerCm5Modes(CM: Cm5Like | undefined, langs: readonly Langua
 export function unregisterCm5Modes(CM: Cm5Like | undefined, langs: readonly Language[]): void {
   if (!CM) return;
   for (const lang of langs) {
-    for (const tag of [lang.id, ...lang.aliases]) delete CM.modes?.[tag];
+    for (const tag of [lang.id, ...lang.aliases]) {
+      if (!CM.modes) continue;
+      if (replaced.has(tag)) CM.modes[tag] = replaced.get(tag);
+      else delete CM.modes[tag];
+      replaced.delete(tag);
+    }
     delete CM.mimeModes?.[mimeFor(lang)];
     if (Array.isArray(CM.modeInfo)) {
       for (let i = CM.modeInfo.length - 1; i >= 0; i--) {

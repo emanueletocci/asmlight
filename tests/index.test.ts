@@ -32,6 +32,13 @@ describe("language registry", () => {
     expect(languageForTag("lds")?.id).toBe("linker");
     expect(languageForTag("cmake")).toBeUndefined();
   });
+  it("resolves HDL and constraint file tags", () => {
+    for (const tag of ["verilog", "SystemVerilog", "sv", "v", "svh"]) expect(languageForTag(tag)?.id).toBe("verilog");
+    expect(languageForTag("VHDL")?.id).toBe("vhdl");
+    expect(languageForTag("vhd")?.id).toBe("vhdl");
+    for (const tag of ["xdc", "sdc", "pcf", "qsf"]) expect(languageForTag(tag)?.id).toBe(tag);
+    expect(languageForTag("tcl")).toBeUndefined();
+  });
   it("no tag is claimed twice", () => {
     const tags = ALL_LANGUAGES.flatMap((l) => [l.id, ...l.aliases]);
     expect(new Set(tags).size).toBe(tags.length);

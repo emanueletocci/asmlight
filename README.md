@@ -2,7 +2,7 @@
 
 An Obsidian plugin for low-level and embedded-systems notes. It adds:
 
-- **Syntax highlighting** for RISC-V, ARM (AArch32/Thumb and AArch64) assembly, Makefiles, GNU ld linker scripts and Devicetree source.
+- **Syntax highlighting** for RISC-V, ARM (AArch32/Thumb and AArch64) assembly, Makefiles, GNU ld linker scripts, Devicetree source, Verilog/SystemVerilog, VHDL and FPGA constraint files (XDC, SDC, PCF, QSF).
 - **Hover cards** that explain the instruction, register, CSR or keyword under your mouse.
 - **Disassembly highlighting** for pasted `objdump -d` and GDB `disassemble` output, with the same colors and hover cards as assembly.
 - **Register diagrams** that turn a short plain-text description into a bitfield drawing, and can decode a value for you.
@@ -69,6 +69,9 @@ Use one of these tags after the opening ```` ``` ````. Tags are case-insensitive
 | Makefile | `makefile` `make` `mk` `mak` | GNU Make: rules, recipes, variables, functions, conditionals, `define` blocks |
 | Linker script | `linker` `ld` `lds` `linkerscript` `linker-script` | GNU ld: `MEMORY`, `SECTIONS`, region placement, symbol assignments |
 | Devicetree | `dts` `dtsi` `devicetree` `device-tree` | Nodes, labels, `&references`, properties, cells, `dt-bindings` macros, `/…/` directives |
+| Verilog / SystemVerilog | `verilog` `systemverilog` `system-verilog` `v` `vh` `sv` `svh` | Modules, ports, sized literals (`8'hFF`, `'0`), `` `define ``/`` `ifdef `` directives, `$display`-style system tasks, `(* attributes *)`, named port connections, SystemVerilog types, interfaces and assertions |
+| VHDL | `vhdl` `vhd` | Entities, architectures, labels, `std_logic`/`numeric_std` types and functions, `'event`-style attributes, bit strings (`x"FF"`, `16#FF#`) |
+| FPGA constraints | `xdc` `sdc` `pcf` `qsf` | Xilinx XDC and SDC timing constraints, icestorm/nextpnr PCF, Intel Quartus QSF: commands, `get_ports`-style queries, `-options`, properties such as `PACKAGE_PIN` and `IOSTANDARD` |
 | Disassembly | `objdump` `disasm` `disassembly`, or `objdump-riscv` `objdump-arm` `objdump-arm64` | `objdump -d` and GDB `disassemble` output; see [Disassembly](#disassembly) |
 
 ![Devicetree highlighting](docs/devicetree.png)
@@ -112,7 +115,10 @@ Hover over any highlighted word to see a short explanation. Some examples:
 | `$@`, `$(patsubst`, `?=`, `.PHONY` | Make automatic variables, functions, operators and special targets |
 | `KEEP`, `LOADADDR`, `AT`, `.` | Linker script commands, functions and the location counter |
 | `interrupts`, `reg`, `reset-gpios` | Devicetree property meaning and format |
-| `0xFFFFF000`, `0b1010`, `#0x1f`, `0755`, `0x4000000UL` | The value as unsigned and signed decimal, hex, binary, octal, and ASCII when printable. Also works on numbers in C and other code blocks |
+| `always_ff`, `<=`, `$clog2`, `` `timescale ``, `\|->` | Verilog/SystemVerilog keywords, nonblocking assignment, system tasks, directives and assertion operators |
+| `process`, `rising_edge`, `'event`, `std_logic` | VHDL keywords, functions, attributes and types |
+| `create_clock`, `get_ports`, `-waveform`, `IOSTANDARD` | Constraint commands, object queries, options and properties |
+| `0xFFFFF000`, `0b1010`, `#0x1f`, `0755`, `0x4000000UL`, `12'hFFF`, `x"FF"` | The value as unsigned and signed decimal, hex, binary, octal, and ASCII when printable. Also works on numbers in C and other code blocks |
 
 ![Hover cards on hex literals](docs/hover-number.png)
 
@@ -225,7 +231,7 @@ Token colors come from your theme's code colors. To change one, add a CSS snippe
 ```
 
 - **Kinds:** `comment`, `label`, `mnemonic`, `directive`, `register`, `number`, `string`, `reloc`, `keyword`, `function`, `variable`, `operator`, `property`.
-- **Per-language rules:** tokens also have an `asmlight-lang-<id>` class (`riscv`, `arm32`, `arm64`, `makefile`, `linker`, `dts`, `objdump`). Instructions inside a disassembly block carry their instruction set's id.
+- **Per-language rules:** tokens also have an `asmlight-lang-<id>` class (`riscv`, `arm32`, `arm64`, `makefile`, `linker`, `dts`, `objdump`, `verilog`, `vhdl`, `xdc`, `sdc`, `pcf`, `qsf`). Instructions inside a disassembly block carry their instruction set's id.
 - **Hover cards:** use `.asmlight-hover`.
 - **Diagrams:** register diagrams use `.asmlight-regmap`; set `--asmlight-bit-width` on it to make bit columns wider or narrower. Memory maps use `.asmlight-memmap`.
 
@@ -234,6 +240,8 @@ Token colors come from your theme's code colors. To change one, add a CSS snippe
 - **Tested on Obsidian 1.14.4.** Highlighting, hover cards and diagrams have been checked in Live Preview and Reading view there. Older versions should work, but haven't been tried.
 - **Symbols named like registers get register colors.** For example, a label called `time` or `control` looks like a register, because those are also CSR or Cortex-M register names.
 - **Indented Makefile lines.** Make requires a tab before recipe lines, but notes often use spaces. So any indented line after a rule is treated as a recipe.
+- **`<=` in HDL code.** An assignment and less-or-equal are written the same way. Asmlight treats `<=` as an assignment (and gives it a hover card) only at the start of a statement, outside parentheses and, in VHDL, outside `if`/`when`/`while` conditions.
+- **Other constraint formats** such as Lattice Diamond LPF and Gowin CST aren't highlighted yet.
 - **Disassembly of other architectures** (x86, …) gets addresses, bytes and symbols highlighted, but not the instructions.
 - **Coverage is focused on what courses and bare-metal code use.** Newer or rare extensions, such as the RISC-V Zv* crypto extensions or Arm SVE, aren't covered.
 
@@ -248,7 +256,7 @@ npm run build   # typecheck + production build
 
 Where things live:
 
-- `src/lang/`: the Makefile, linker script, Devicetree and disassembly tokenizers.
+- `src/lang/`: the Makefile, linker script, Devicetree, disassembly, Verilog, VHDL and constraint file tokenizers.
 - `src/isa/`: assembly instruction and register tables.
 - `src/docs/`: hover-card text.
 - `src/regmap/` and `src/memmap/`: the register-diagram and memory-map parsers and renderers.
