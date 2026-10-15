@@ -1,5 +1,5 @@
 import esbuild from "esbuild";
-import builtins from "builtin-modules";
+import { builtinModules } from "node:module";
 
 const prod = process.argv[2] === "production";
 const ctx = await esbuild.context({
@@ -8,7 +8,7 @@ const ctx = await esbuild.context({
   format: "cjs",
   target: "es2018",
   outfile: "main.js",
-  external: ["obsidian", "electron", "@codemirror/*", "@lezer/*", ...builtins],
+  external: ["obsidian", "electron", "@codemirror/*", "@lezer/*", ...builtinModules],
   sourcemap: prod ? false : "inline",
   treeShaking: true,
   logLevel: "info",

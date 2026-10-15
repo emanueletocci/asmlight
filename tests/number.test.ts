@@ -76,7 +76,7 @@ describe("number hover in a block", () => {
     const num = Array.from(code.querySelectorAll("span")).find((s) => s.textContent === "0x80000000")!;
     const doc = docForElement(num)!;
     expect(doc.tag).toBe("Number · 32-bit");
-    const card = renderCard(doc, document);
+    const card = renderCard(doc, document.body);
     expect(card.querySelector(".asmlight-hover-summary")).toBeNull();
     const cells = Array.from(card.querySelectorAll(".asmlight-hover-rows tr")).map((tr) => tr.textContent);
     expect(cells).toContain("Signed (i32)-2,147,483,648");

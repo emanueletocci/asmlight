@@ -34,38 +34,33 @@ export function docForElement(el: Element): HoverDoc | undefined {
   return languageById(info.lang)?.describe?.(text, info.kind);
 }
 
-export function renderCard(doc: HoverDoc, d: Document): HTMLElement {
-  const el = (tag: string, cls: string, text?: string) => {
-    const e = d.createElement(tag);
-    e.className = cls;
-    if (text !== undefined) e.textContent = text;
-    return e;
-  };
-  const card = el("div", "asmlight-hover");
+/** Builds the card as the last child of `parent` (normally the document body). */
+export function renderCard(doc: HoverDoc, parent: HTMLElement): HTMLElement {
+  const el = (into: HTMLElement, tag: keyof HTMLElementTagNameMap, cls: string, text?: string) =>
+    into.createEl(tag, { cls: cls || undefined, text });
+  const card = el(parent, "div", "asmlight-hover");
   card.setAttribute("role", "tooltip");
-  const head = el("div", "asmlight-hover-head");
-  head.append(el("code", "asmlight-hover-title", doc.title), el("span", "asmlight-hover-tag", doc.tag));
-  card.append(head);
-  if (doc.summary) card.append(el("div", "asmlight-hover-summary", doc.summary));
+  const head = el(card, "div", "asmlight-hover-head");
+  el(head, "code", "asmlight-hover-title", doc.title);
+  el(head, "span", "asmlight-hover-tag", doc.tag);
+  if (doc.summary) el(card, "div", "asmlight-hover-summary", doc.summary);
   if (doc.rows?.length) {
-    const table = el("table", "asmlight-hover-rows");
+    const table = el(card, "table", "asmlight-hover-rows");
     for (const [label, value] of doc.rows) {
-      const tr = el("tr", "");
-      tr.append(el("th", "asmlight-hover-label", label), el("td", "asmlight-hover-value", value));
-      table.append(tr);
+      const tr = el(table, "tr", "");
+      el(tr, "th", "asmlight-hover-label", label);
+      el(tr, "td", "asmlight-hover-value", value);
     }
-    card.append(table);
   }
   for (const [label, body] of [["Syntax", doc.syntax], ["Operation", doc.operation]] as const) {
     if (!body) continue;
-    const block = el("div", "asmlight-hover-block");
-    block.append(el("div", "asmlight-hover-label", label), el("code", "asmlight-hover-code", body));
-    card.append(block);
+    const block = el(card, "div", "asmlight-hover-block");
+    el(block, "div", "asmlight-hover-label", label);
+    el(block, "code", "asmlight-hover-code", body);
   }
   if (doc.notes?.length) {
-    const ul = el("ul", "asmlight-hover-notes");
-    for (const n of doc.notes) ul.append(el("li", "", n));
-    card.append(ul);
+    const ul = el(card, "ul", "asmlight-hover-notes");
+    for (const n of doc.notes) el(ul, "li", "", n);
   }
   return card;
 }
@@ -138,9 +133,8 @@ export class HoverController {
       const doc = docForElement(token);
       if (!doc) return;
       this.removeCard();
-      const card = renderCard(doc, this.doc);
+      const card = renderCard(doc, this.doc.body);
       card.classList.add("is-measuring");
-      this.doc.body.append(card);
       const r = token.getBoundingClientRect();
       const pos = placeCard(r, { width: card.offsetWidth, height: card.offsetHeight }, { width: win.innerWidth, height: win.innerHeight });
       card.setCssProps({ "--asmlight-hover-left": `${pos.left}px`, "--asmlight-hover-top": `${pos.top}px` });

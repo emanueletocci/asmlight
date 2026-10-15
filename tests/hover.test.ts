@@ -53,7 +53,7 @@ describe("hover in a highlighted block", () => {
   });
 
   it("renders a card with escaped text", () => {
-    const card = renderCard({ title: "<b>", tag: "t", summary: "s", syntax: "x", operation: "y", notes: ["n"] }, document);
+    const card = renderCard({ title: "<b>", tag: "t", summary: "s", syntax: "x", operation: "y", notes: ["n"] }, document.body);
     expect(card.querySelector("b")).toBeNull();
     expect(card.querySelectorAll(".asmlight-hover-block")).toHaveLength(2);
     expect(card.querySelector(".asmlight-hover-notes li")!.textContent).toBe("n");
