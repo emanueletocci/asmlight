@@ -156,6 +156,16 @@ describe("renderMemmap", () => {
     expect(style).toMatch(/var\(--[\w-]+, #[0-9a-f]+\)/);
   });
 
+  it("colors: \"light\" uses fixed colors on a white card instead of theme variables", () => {
+    const el = document.createElement("div");
+    renderMemmap("0x0 1K A", el, { colors: "light" });
+    const svg = el.querySelector("svg")!;
+    expect(svg.outerHTML).not.toContain("var(--");
+    expect(svg.querySelector(".asmlight-diagram-bg")!.getAttribute("style")).toContain("#ffffff");
+    renderMemmap("0x0 1K A", el);
+    expect(el.querySelector(".asmlight-diagram-bg")).toBeNull();
+  });
+
   it("errors, empty hint, and no markup injection", () => {
     const el = document.createElement("div");
     renderMemmap("0x0 1K <img/src=x> <b>bold</b>\n0x0 0x10 B", el);

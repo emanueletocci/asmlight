@@ -1,4 +1,4 @@
-import { COLOR, box, finish, startSvg, svgEl, text, textWidth, tooltip } from "../svg/draw";
+import { box, finish, paletteFor, startSvg, svgEl, text, textWidth, tooltip, type DiagramOptions, type Palette } from "../svg/draw";
 import { bitRange, fieldValue, formatValue, layoutRows, parseRegmap, type RegField, type Register } from "./parse";
 
 /** Creates a child of `parent` with Obsidian's createEl, so it lands in the parent's window (popouts included). */
@@ -16,29 +16,30 @@ const VALUE_H = 18;     // row of decoded bits
 const MIN_FIELD_H = 30;
 
 /** Draws the title line and the bit grid of one register as an SVG. */
-function drawRegister(into: HTMLElement, reg: Register): void {
-  const c = startSvg(into, "asmlight-regmap-svg");
+function drawRegister(into: HTMLElement, reg: Register, pal: Palette): void {
+  const c = startSvg(into, "asmlight-regmap-svg", pal);
+  const P = pal;
   const cw = reg.perRow <= 16 ? 34 : 24;          // width of one bit column
   let y = PAD + 14;
   let x = PAD;
 
   // Title: name, width, decoded value, caption.
   if (reg.name) {
-    text(c.svg, x, y, reg.name, 14, { bold: true, cls: "asmlight-regmap-name" });
+    text(c.svg, x, y, reg.name, 14, { bold: true, fill: P.text, cls: "asmlight-regmap-name" });
     x += textWidth(reg.name, 14, true) + 12;
   }
   const width = `${reg.width}-bit`;
-  text(c.svg, x, y, width, 11, { fill: COLOR.muted, cls: "asmlight-regmap-width" });
+  text(c.svg, x, y, width, 11, { fill: P.muted, cls: "asmlight-regmap-width" });
   x += textWidth(width, 11) + 12;
   if (reg.value !== undefined) {
     const hex = `= 0x${reg.value.toString(16).toUpperCase().padStart(Math.ceil(reg.width / 4), "0")}`;
-    text(c.svg, x, y, hex, 12, { bold: true, fill: COLOR.accent, cls: "asmlight-regmap-value" });
+    text(c.svg, x, y, hex, 12, { bold: true, fill: P.accent, cls: "asmlight-regmap-value" });
     x += textWidth(hex, 12, true) + 12;
   }
   let maxX = x;
   if (reg.caption) {
     y += 16;
-    text(c.svg, PAD, y, reg.caption, 11, { fill: COLOR.muted, cls: "asmlight-regmap-caption" });
+    text(c.svg, PAD, y, reg.caption, 11, { fill: P.muted, cls: "asmlight-regmap-caption" });
     maxX = Math.max(maxX, PAD + textWidth(reg.caption, 11));
   }
   y += 10;
@@ -49,7 +50,7 @@ function drawRegister(into: HTMLElement, reg: Register): void {
     maxX = Math.max(maxX, PAD + bits * cw);
 
     for (let b = top, i = 0; i < bits; b--, i++) {
-      text(c.svg, PAD + i * cw + cw / 2, y + 11, String(b), 9, { fill: COLOR.faint, anchor: "middle", cls: "asmlight-regmap-bitno" });
+      text(c.svg, PAD + i * cw + cw / 2, y + 11, String(b), 9, { fill: P.faint, anchor: "middle", cls: "asmlight-regmap-bitno" });
     }
     y += BITNO_H;
 
@@ -70,10 +71,10 @@ function drawRegister(into: HTMLElement, reg: Register): void {
         class: `asmlight-regmap-field${!f ? " is-gap" : f.reserved ? " is-reserved" : ""}`,
         "data-span": span,
       });
-      box(g, fx, y, w, fieldH, !f || f.reserved ? c.hatch : COLOR.fill);
+      box(g, fx, y, w, fieldH, !f || f.reserved ? c.hatch : P.fill, { stroke: P.line });
       if (f) {
         if (f.name !== "-") {
-          const color = f.reserved ? COLOR.muted : COLOR.text;
+          const color = f.reserved ? P.muted : P.text;
           if (fits(f, span)) {
             text(g, fx + w / 2, y + fieldH / 2 + 4, f.name, 11, { bold: !f.reserved, anchor: "middle", fill: color, cls: "asmlight-regmap-label" });
           } else {
@@ -91,11 +92,11 @@ function drawRegister(into: HTMLElement, reg: Register): void {
       for (let b = top, i = 0; i < bits; b--, i++) {
         const bit = fieldValue(reg.value, b, b) !== BigInt(0);
         const bx = PAD + i * cw;
-        if (bit) svgEl(c.svg, "rect", { x: bx, y, width: cw, height: VALUE_H, style: `fill: ${COLOR.setFill}` });
+        if (bit) svgEl(c.svg, "rect", { x: bx, y, width: cw, height: VALUE_H, style: `fill: ${P.setFill}` });
         text(c.svg, bx + cw / 2, y + 13, bit ? "1" : "0", 11, {
           anchor: "middle",
           bold: bit,
-          fill: bit ? COLOR.accent : COLOR.faint,
+          fill: bit ? P.accent : P.faint,
           cls: `asmlight-regmap-bit${bit ? " is-set" : ""}`,
         });
       }
@@ -106,13 +107,13 @@ function drawRegister(into: HTMLElement, reg: Register): void {
   finish(c, maxX + PAD, y);
 }
 
-function renderRegister(into: HTMLElement, reg: Register): void {
+function renderRegister(into: HTMLElement, reg: Register, pal: Palette): void {
   const fig = el(into, "figure", "asmlight-regmap-reg");
   if (reg.errors.length) {
     const ul = el(fig, "ul", "asmlight-regmap-errors");
     for (const e of reg.errors) el(ul, "li", "", e);
   }
-  drawRegister(fig, reg);
+  drawRegister(fig, reg, pal);
 
   // The legend stays an HTML table: it is text, it wraps, and every exporter styles tables.
   const named = reg.fields.filter((f) => f.name !== "-");
@@ -137,10 +138,11 @@ function renderRegister(into: HTMLElement, reg: Register): void {
 }
 
 /** Renders every register described in a `regmap` code block into `container`. */
-export function renderRegmap(source: string, container: HTMLElement): void {
+export function renderRegmap(source: string, container: HTMLElement, opts: DiagramOptions = {}): void {
   container.empty();
   const root = el(container, "div", "asmlight-regmap");
   const regs = parseRegmap(source);
   if (!regs.length) el(root, "div", "asmlight-regmap-empty", "regmap: describe a register, e.g. \"mstatus: 32\" followed by \"MIE 3 Machine interrupt enable\"");
-  for (const reg of regs) renderRegister(root, reg);
+  const pal = paletteFor(opts);
+  for (const reg of regs) renderRegister(root, reg, pal);
 }

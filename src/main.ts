@@ -39,10 +39,10 @@ export default class AsmlightPlugin extends Plugin {
     this.registerEvent(this.app.workspace.on("window-open", (_w, win) => this.attachHover(win.document)));
 
     for (const tag of ["regmap", "bitfield"]) {
-      this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderRegmap(source, el));
+      this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderRegmap(source, el, { colors: this.settings.diagramColors }));
     }
     for (const tag of ["memmap", "memory", "addrmap"]) {
-      this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderMemmap(source, el));
+      this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderMemmap(source, el, { colors: this.settings.diagramColors }));
     }
 
     registerCm5Modes(globals().CodeMirror, ALL_LANGUAGES);
@@ -70,6 +70,12 @@ export default class AsmlightPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  /** Redraws regmap/memmap blocks in open notes, e.g. after the diagram colors changed. */
+  redrawDiagrams() {
+    this.rerenderReadingViews();
+    this.rebuildEditors();
   }
 
   private attachHover(doc: Document) {

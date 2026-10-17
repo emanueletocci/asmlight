@@ -127,6 +127,7 @@ Options are under **Settings → Asmlight**:
 - **Hover cards:** turn the cards on or off.
 - **Require Ctrl/Cmd:** only show a card while Ctrl (Cmd on macOS) is held, like Obsidian's page preview.
 - **Hover delay:** how long to wait before a card appears.
+- **Diagram colors:** *Follow theme* draws register diagrams and memory maps with your theme's colors; *Always light (print-friendly)* draws them with fixed light colors on a white card, so they stay light in PDF exports even when you use a dark theme.
 
 On mobile, tap a highlighted word in Reading view to show its card.
 
@@ -237,7 +238,7 @@ Token colors come from your theme's code colors. To change one, add a CSS snippe
 
 ## Exporting
 
-Register diagrams and memory maps are inline SVG with their colors and layout written into the drawing itself, so they keep their look in Obsidian's own PDF export and in third-party exporters that print the note without loading plugin stylesheets (for example Advanced PDF Export). Outside Obsidian, where the theme variables don't exist, they fall back to a light color scheme.
+Register diagrams and memory maps are inline SVG with their colors and layout written into the drawing itself, so they keep their look in Obsidian's own PDF export and in third-party exporters that print the note without loading plugin stylesheets (for example Advanced PDF Export). Outside Obsidian, where the theme variables don't exist, they fall back to a light color scheme. If you write with a dark theme but export for printing, set **Diagram colors** to *Always light* before exporting.
 
 ## Known limitations
 

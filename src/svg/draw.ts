@@ -15,18 +15,55 @@ export const SVG_NS = "http://www.w3.org/2000/svg";
 export const FONT =
   'ui-monospace, SFMono-Regular, "Cascadia Mono", "Roboto Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Monaco, Consolas, monospace';
 
-export const COLOR = {
-  text: "var(--text-normal, #1f2328)",
-  muted: "var(--text-muted, #59636e)",
-  faint: "var(--text-faint, #8c959f)",
-  line: "var(--text-faint, #8c959f)",
-  fill: "var(--background-secondary, #f6f8fa)",
-  accent: "var(--text-accent, #0969da)",
+export interface Palette {
+  text: string;
+  muted: string;
+  faint: string;
+  line: string;
+  fill: string;
+  accent: string;
+  setFill: string;
+  hatch: string;
+  hatchBg: string;
+  /** Card behind the whole drawing; only the fixed palette needs one. */
+  background?: string;
+}
+
+/** Fixed light colors: readable on paper and on any page, whatever the Obsidian theme. */
+export const LIGHT: Palette = {
+  text: "#1f2328",
+  muted: "#59636e",
+  faint: "#8c959f",
+  line: "#8c959f",
+  fill: "#f6f8fa",
+  accent: "#0969da",
   setFill: "rgba(9, 105, 218, 0.14)",
-  hatch: "var(--background-modifier-border, #d0d7de)",
-  hatchBg: "var(--background-primary, #ffffff)",
-  error: "var(--text-error, #cf222e)",
+  hatch: "#d0d7de",
+  hatchBg: "#ffffff",
+  background: "#ffffff",
 };
+
+/** Theme colors, with the light palette as fallback where Obsidian's CSS variables don't exist. */
+export const THEME: Palette = {
+  text: `var(--text-normal, ${LIGHT.text})`,
+  muted: `var(--text-muted, ${LIGHT.muted})`,
+  faint: `var(--text-faint, ${LIGHT.faint})`,
+  line: `var(--text-faint, ${LIGHT.line})`,
+  fill: `var(--background-secondary, ${LIGHT.fill})`,
+  accent: `var(--text-accent, ${LIGHT.accent})`,
+  setFill: LIGHT.setFill,
+  hatch: `var(--background-modifier-border, ${LIGHT.hatch})`,
+  hatchBg: `var(--background-primary, ${LIGHT.hatchBg})`,
+};
+
+export type DiagramColors = "theme" | "light";
+
+export interface DiagramOptions {
+  /** "theme" follows Obsidian's theme; "light" always uses the light palette (print-friendly). */
+  colors?: DiagramColors;
+}
+
+export const paletteFor = (o: DiagramOptions = {}): Palette => (o.colors === "light" ? LIGHT : THEME);
 
 type Attrs = Record<string, string | number>;
 
@@ -70,7 +107,7 @@ export interface TextOpts {
 }
 
 export function text(parent: Element, x: number, y: number, s: string, size: number, o: TextOpts = {}): SVGTextElement {
-  const attrs: Attrs = { x, y, "font-size": size, style: `fill: ${o.fill ?? COLOR.text}` };
+  const attrs: Attrs = { x, y, "font-size": size, style: `fill: ${o.fill ?? "currentColor"}` };
   if (o.bold) attrs["font-weight"] = "bold";
   if (o.anchor) attrs["text-anchor"] = o.anchor;
   if (o.vertical) attrs.transform = `rotate(-90 ${fmt(x)} ${fmt(y)})`;
@@ -86,7 +123,7 @@ export interface BoxOpts {
 }
 
 export function box(parent: Element, x: number, y: number, w: number, h: number, fill: string, o: BoxOpts = {}): SVGRectElement {
-  let style = `fill: ${fill}; stroke: ${o.stroke ?? COLOR.line}; stroke-width: 1`;
+  let style = `fill: ${fill}; stroke: ${o.stroke ?? "currentColor"}; stroke-width: 1`;
   if (o.dashed) style += "; stroke-dasharray: 4 3";
   const attrs: Attrs = { x, y, width: w, height: h, style };
   if (o.rx) attrs.rx = o.rx;
@@ -103,12 +140,13 @@ let patternCount = 0;
 
 export interface Canvas {
   svg: SVGSVGElement;
+  pal: Palette;
   /** `url(#…)` of this SVG's hatch pattern, for reserved fields, gaps and holes. */
   hatch: string;
 }
 
 /** Starts an SVG inside `container`; call `finish` once the drawing size is known. */
-export function startSvg(container: HTMLElement, cls: string): Canvas {
+export function startSvg(container: HTMLElement, cls: string, pal: Palette): Canvas {
   const svg = svgEl(container, "svg", {
     class: cls,
     "font-family": FONT,
@@ -116,9 +154,9 @@ export function startSvg(container: HTMLElement, cls: string): Canvas {
   });
   const id = `asmlight-hatch-${++patternCount}`;
   const pattern = svgEl(svgEl(svg, "defs"), "pattern", { id, width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" });
-  svgEl(pattern, "rect", { width: 6, height: 6, style: `fill: ${COLOR.hatchBg}` });
-  svgEl(pattern, "line", { x1: 0, y1: 0, x2: 0, y2: 6, style: `stroke: ${COLOR.hatch}; stroke-width: 2` });
-  return { svg, hatch: `url(#${id})` };
+  svgEl(pattern, "rect", { width: 6, height: 6, style: `fill: ${pal.hatchBg}` });
+  svgEl(pattern, "line", { x1: 0, y1: 0, x2: 0, y2: 6, style: `stroke: ${pal.hatch}; stroke-width: 2` });
+  return { svg, pal, hatch: `url(#${id})` };
 }
 
 export function finish(c: Canvas, width: number, height: number): void {
@@ -126,4 +164,9 @@ export function finish(c: Canvas, width: number, height: number): void {
   c.svg.setAttribute("width", String(w));
   c.svg.setAttribute("height", String(h));
   c.svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  if (c.pal.background) {
+    // Card behind the drawing, so fixed dark text stays readable on a dark page.
+    const card = svgEl(c.svg, "rect", { class: "asmlight-diagram-bg", width: w, height: h, rx: 4, style: `fill: ${c.pal.background}` });
+    c.svg.insertBefore(card, c.svg.firstChild?.nextSibling ?? null);   // right after <defs>
+  }
 }

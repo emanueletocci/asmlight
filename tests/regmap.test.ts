@@ -102,6 +102,17 @@ describe("renderRegmap", () => {
     expect(rows[0]).toEqual(["12:11", "MPP", "0b11 (3) → M", "Previous privilege0 = U, 1 = S, 3 = M"]);
   });
 
+  it("colors: \"light\" uses fixed colors on a white card instead of theme variables", () => {
+    const el = document.createElement("div");
+    renderRegmap(MSTATUS, el, { colors: "light" });
+    const svg = el.querySelector("svg")!;
+    expect(svg.outerHTML).not.toContain("var(--");
+    // the card sits right after <defs>, behind everything else
+    expect(svg.children[1].classList.contains("asmlight-diagram-bg")).toBe(true);
+    renderRegmap(MSTATUS, el);
+    expect(el.querySelector("svg")!.outerHTML).toContain("var(--text-normal");
+  });
+
   it("shows errors and a hint for empty blocks", () => {
     const el = document.createElement("div");
     renderRegmap("A 3\nB 3", el);
