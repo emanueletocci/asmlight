@@ -149,21 +149,34 @@ describe("renderMemmap", () => {
     expect(heights[1]).toBeGreaterThan(heights[0]);
   });
 
-  it("uses theme colors with fallbacks, so exporters without Obsidian's CSS still draw it", () => {
+  it("colors: theme variables with fallbacks by default; light card or auto (light in print) on request", () => {
     const el = document.createElement("div");
+    const css = () => el.querySelector("svg > style")!.textContent!;
+    const scope = () => Array.from(el.querySelector(".asmlight-memmap")!.classList).find((c) => c.startsWith("asmlight-scope-"))!;
+
     renderMemmap("0x0 1K A", el);
-    const style = el.querySelector(".asmlight-memmap-box")!.getAttribute("style")!;
-    expect(style).toMatch(/var\(--[\w-]+, #[0-9a-f]+\)/);
+    // elements paint with diagram-local variables, defined on the diagram's container
+    expect(el.querySelector(".asmlight-memmap-box")!.getAttribute("style")).toContain("var(--asmlight-c-fill)");
+    expect(css()).toContain(`.${scope()} {`);
+    expect(css()).toMatch(/--asmlight-c-text: var\(--text-normal, #[0-9a-f]+\)/);
+    expect(css()).not.toContain("@media print");
+
+    renderMemmap("0x0 1K A", el, { colors: "light" });
+    expect(css()).not.toContain("var(--");
+    expect(css()).toContain("background: #ffffff");
+
+    renderMemmap("0x0 1K A", el, { colors: "auto" });
+    const [screen, print] = css().split("@media print");
+    expect(screen).toContain("var(--text-normal");
+    expect(print).toContain("background: #ffffff");
   });
 
-  it("colors: \"light\" uses fixed colors on a white card instead of theme variables", () => {
+  it("is labelled for screen readers", () => {
     const el = document.createElement("div");
-    renderMemmap("0x0 1K A", el, { colors: "light" });
+    renderMemmap(STM32, el);
     const svg = el.querySelector("svg")!;
-    expect(svg.outerHTML).not.toContain("var(--");
-    expect(svg.querySelector(".asmlight-diagram-bg")!.getAttribute("style")).toContain("#ffffff");
-    renderMemmap("0x0 1K A", el);
-    expect(el.querySelector(".asmlight-diagram-bg")).toBeNull();
+    expect(svg.getAttribute("role")).toBe("img");
+    expect(svg.getAttribute("aria-label")).toMatch(/^Memory map STM32F407 \(subset\): \d+ regions, 0x0800_0000 to 0xE000_EFFF$/);
   });
 
   it("errors, empty hint, and no markup injection", () => {

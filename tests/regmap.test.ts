@@ -102,15 +102,27 @@ describe("renderRegmap", () => {
     expect(rows[0]).toEqual(["12:11", "MPP", "0b11 (3) → M", "Previous privilege0 = U, 1 = S, 3 = M"]);
   });
 
-  it("colors: \"light\" uses fixed colors on a white card instead of theme variables", () => {
+  it("colors: the light card also covers the legend, and auto applies it only in print", () => {
     const el = document.createElement("div");
     renderRegmap(MSTATUS, el, { colors: "light" });
+    const fig = el.querySelector("figure")!;
+    const scope = Array.from(fig.classList).find((c) => c.startsWith("asmlight-scope-"))!;
+    const css = fig.querySelector("svg > style")!.textContent!;
+    expect(css).not.toContain("var(--");
+    expect(css).toContain(`.${scope} .asmlight-regmap-legend th`);
+    renderRegmap(MSTATUS, el, { colors: "auto" });
+    expect(el.querySelector("svg > style")!.textContent).toMatch(/var\(--text-normal.*@media print \{ \.asmlight-scope-\d+ \{ .*background: #ffffff/s);
+  });
+
+  it("shows multi-bit field values inside the fields, separates nibbles, and is labelled", () => {
+    const el = document.createElement("div");
+    renderRegmap("PRI: 32 = 0x80000000\nPRI_11 31:24 SVCall priority\nEN 0", el);
     const svg = el.querySelector("svg")!;
-    expect(svg.outerHTML).not.toContain("var(--");
-    // the card sits right after <defs>, behind everything else
-    expect(svg.children[1].classList.contains("asmlight-diagram-bg")).toBe(true);
-    renderRegmap(MSTATUS, el);
-    expect(el.querySelector("svg")!.outerHTML).toContain("var(--text-normal");
+    expect(Array.from(svg.querySelectorAll(".asmlight-regmap-fieldval")).map((v) => v.textContent)).toEqual(["0x80"]);
+    // one separator per hex digit boundary, in both the bit-number row and the value row
+    expect(svg.querySelectorAll(".asmlight-regmap-nibble")).toHaveLength(14);
+    expect(svg.getAttribute("role")).toBe("img");
+    expect(svg.getAttribute("aria-label")).toBe("Register PRI 32-bit, value 0x80000000. Fields: PRI_11 [31:24], EN [0]");
   });
 
   it("shows errors and a hint for empty blocks", () => {

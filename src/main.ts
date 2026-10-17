@@ -1,10 +1,11 @@
-import { loadPrism, MarkdownView, Plugin } from "obsidian";
+import { loadPrism, MarkdownView, Menu, Notice, Plugin } from "obsidian";
 import { registerCm5Modes, unregisterCm5Modes, type Cm5Like } from "./adapters/cm5";
 import { highlightCodeElement, languageForCodeElement } from "./adapters/reading";
 import { HoverController } from "./hover/hover";
 import { ALL_LANGUAGES, languageForTag } from "./languages";
 import { renderMemmap } from "./memmap/render";
 import { renderRegmap } from "./regmap/render";
+import { standaloneSvgs, type DiagramKind } from "./svg/export";
 import { AsmlightSettingTab, DEFAULT_SETTINGS, type AsmlightSettings } from "./settings";
 
 /** Globals Obsidian puts on window that aren't in its public typings. */
@@ -39,10 +40,16 @@ export default class AsmlightPlugin extends Plugin {
     this.registerEvent(this.app.workspace.on("window-open", (_w, win) => this.attachHover(win.document)));
 
     for (const tag of ["regmap", "bitfield"]) {
-      this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderRegmap(source, el, { colors: this.settings.diagramColors }));
+      this.registerMarkdownCodeBlockProcessor(tag, (source, el, ctx) => {
+        renderRegmap(source, el, { colors: this.settings.diagramColors });
+        this.attachExportMenu("regmap", source, el, ctx.sourcePath);
+      });
     }
     for (const tag of ["memmap", "memory", "addrmap"]) {
-      this.registerMarkdownCodeBlockProcessor(tag, (source, el) => renderMemmap(source, el, { colors: this.settings.diagramColors }));
+      this.registerMarkdownCodeBlockProcessor(tag, (source, el, ctx) => {
+        renderMemmap(source, el, { colors: this.settings.diagramColors });
+        this.attachExportMenu("memmap", source, el, ctx.sourcePath);
+      });
     }
 
     registerCm5Modes(globals().CodeMirror, ALL_LANGUAGES);
@@ -70,6 +77,31 @@ export default class AsmlightPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  /** Right-click on a diagram: copy it as SVG, or save it as an .svg file next to the note's attachments. */
+  private attachExportMenu(kind: DiagramKind, source: string, el: HTMLElement, sourcePath: string) {
+    el.querySelectorAll("svg").forEach((svg, i) => {
+      svg.addEventListener("contextmenu", (evt: MouseEvent) => {
+        evt.preventDefault();
+        const drawing = () => standaloneSvgs(kind, source, el.ownerDocument)[i];
+        new Menu()
+          .addItem((item) => item.setTitle("Copy diagram as SVG").setIcon("copy").onClick(async () => {
+            const d = drawing();
+            if (!d) return;
+            await navigator.clipboard.writeText(d.svg);
+            new Notice("Diagram copied as SVG");
+          }))
+          .addItem((item) => item.setTitle("Save diagram as SVG").setIcon("image").onClick(async () => {
+            const d = drawing();
+            if (!d) return;
+            const path = await this.app.fileManager.getAvailablePathForAttachment(`${d.name}.svg`, sourcePath);
+            await this.app.vault.create(path, d.svg);
+            new Notice(`Diagram saved as ${path}`);
+          }))
+          .showAtMouseEvent(evt);
+      });
+    });
   }
 
   /** Redraws regmap/memmap blocks in open notes, e.g. after the diagram colors changed. */

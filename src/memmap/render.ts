@@ -1,4 +1,4 @@
-import { box, finish, paletteFor, startSvg, svgEl, text, textWidth, tooltip, type Canvas, type DiagramOptions, type Palette } from "../svg/draw";
+import { box, colorMode, finish, startSvg, svgEl, text, textWidth, tooltip, type Canvas, type DiagramOptions, type Palette } from "../svg/draw";
 import { formatAddr, formatSize, layout, parseMemmap, type LayoutItem, type MemMap, type MemMarker, type MemRegion } from "./parse";
 
 /** Creates a child of `parent` with Obsidian's createEl, so it lands in the parent's window (popouts included). */
@@ -164,7 +164,10 @@ export function renderMemmap(source: string, container: HTMLElement, opts: Diagr
     return;
   }
 
-  const c = startSvg(root, "asmlight-memmap-svg", paletteFor(opts));
+  const regionCount = (rs: MemRegion[]): number => rs.reduce((n, r) => n + 1 + regionCount(r.children), 0);
+  const label = `Memory map${map.title ? ` ${map.title}` : ""}: ${regionCount(map.regions)} regions, ` +
+    `${formatAddr(map.regions[0]?.start ?? BigInt(0), map.digits)} to ${formatAddr((map.regions[map.regions.length - 1]?.end ?? ONE) - ONE, map.digits)}`;
+  const c = startSvg(root, "asmlight-memmap-svg", { scope: root, label, colors: colorMode(opts) });
   const P = c.pal;
   const x: Ctx = { map, c, addrW: textWidth(formatAddr(BigInt(0), map.digits), 10) + 12 };
   const items = layout(map.regions, map.markers);

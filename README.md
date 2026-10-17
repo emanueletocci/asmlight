@@ -25,7 +25,7 @@ It works in Reading view, Live Preview and Source mode, on desktop and mobile, a
 
 ## Install
 
-Asmlight isn't in the community plugin list yet, so install it by hand:
+Asmlight isn't in the community plugin list yet, so install it by hand. The quickest way is a release: download `main.js`, `manifest.json` and `styles.css` from the [Releases](https://github.com/mecilh/asmlight/releases) page and do steps 2–4 below. To build it yourself instead:
 
 1. Build it: `git clone https://github.com/mecilh/asmlight && cd asmlight && npm install && npm run build`
 2. Create the folder `<your vault>/.obsidian/plugins/asmlight/`.
@@ -127,7 +127,7 @@ Options are under **Settings → Asmlight**:
 - **Hover cards:** turn the cards on or off.
 - **Require Ctrl/Cmd:** only show a card while Ctrl (Cmd on macOS) is held, like Obsidian's page preview.
 - **Hover delay:** how long to wait before a card appears.
-- **Diagram colors:** *Follow theme* draws register diagrams and memory maps with your theme's colors; *Always light (print-friendly)* draws them with fixed light colors on a white card, so they stay light in PDF exports even when you use a dark theme.
+- **Diagram colors:** *Follow theme* draws register diagrams and memory maps with your theme's colors; *Always light (print-friendly)* draws them with fixed light colors on a white card; *Auto* follows the theme on screen and switches to the light card when the note is printed or exported to PDF. The light card also covers the register legend.
 
 On mobile, tap a highlighted word in Reading view to show its card.
 
@@ -169,7 +169,7 @@ Details:
 - **No header:** the width becomes the smallest of 8, 16, 32, 64 or 128 that fits the highest bit.
 - **Errors:** shown above the diagram. These cover overlapping fields, bits outside the register, values that don't fit, and lines that can't be read.
 
-A good use: paste a value from GDB (`p/x $mcause`) or a datasheet next to the register description, and read off the decoded fields.
+A good use: paste a value from GDB (`p/x $mcause`) or a datasheet next to the register description, and read off the decoded fields. With a value, fields of two or more bits also show their own value inside the box, and thin separators mark every hex digit (4 bits) in the bit-number and value rows.
 
 ## Memory maps
 
@@ -238,7 +238,11 @@ Token colors come from your theme's code colors. To change one, add a CSS snippe
 
 ## Exporting
 
-Register diagrams and memory maps are inline SVG with their colors and layout written into the drawing itself, so they keep their look in Obsidian's own PDF export and in third-party exporters that print the note without loading plugin stylesheets (for example Advanced PDF Export). Outside Obsidian, where the theme variables don't exist, they fall back to a light color scheme. If you write with a dark theme but export for printing, set **Diagram colors** to *Always light* before exporting.
+Register diagrams and memory maps are inline SVG with their colors and layout written into the drawing itself, so they keep their look in Obsidian's own PDF export and in third-party exporters that print the note without loading plugin stylesheets (for example Advanced PDF Export). Outside Obsidian, where the theme variables don't exist, they fall back to a light color scheme. If you write with a dark theme but export for printing, set **Diagram colors** to *Auto* (light only in the PDF) or *Always light*.
+
+Right-click a diagram to **copy it as SVG** or **save it as an .svg file** (in your attachment folder). The file uses plain light colors with no CSS variables, so it opens the same in a browser, Inkscape or a slide editor. Diagrams carry an `aria-label` that summarises them for screen readers.
+
+Releases are built by a GitHub Action: push a tag equal to the version in `manifest.json` (for example `git tag 0.6.0 && git push origin 0.6.0`) and it tests, builds and attaches `main.js`, `manifest.json` and `styles.css` to a new release.
 
 ## Known limitations
 

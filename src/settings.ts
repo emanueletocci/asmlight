@@ -22,10 +22,14 @@ const TEXT = {
   hoverDelay: ["Hover delay", "Milliseconds to wait before showing a card."],
   diagramColors: [
     "Diagram colors",
-    "Colors of register diagrams and memory maps. \"Always light\" draws them on a white card with print-friendly colors, so they stay light in PDF exports even when you use a dark theme.",
+    "Colors of register diagrams and memory maps. \"Follow theme\" uses your theme's colors; \"Always light\" draws them on a white card with print-friendly colors; \"Auto\" follows the theme on screen and switches to the light card when the note is printed or exported to PDF.",
   ],
 } as const;
-const COLOR_OPTIONS: Record<DiagramColors, string> = { theme: "Follow theme", light: "Always light (print-friendly)" };
+const COLOR_OPTIONS: Record<DiagramColors, string> = {
+  theme: "Follow theme",
+  light: "Always light (print-friendly)",
+  auto: "Auto: theme on screen, light in print",
+};
 const DELAY = { min: 0, max: 1000, step: 50 };
 
 export class AsmlightSettingTab extends PluginSettingTab {
@@ -82,7 +86,7 @@ export class AsmlightSettingTab extends PluginSettingTab {
       .setName(TEXT.diagramColors[0])
       .setDesc(TEXT.diagramColors[1])
       .addDropdown((d) => d.addOptions(COLOR_OPTIONS).setValue(s.diagramColors).onChange(async (v) => {
-        s.diagramColors = v === "light" ? "light" : "theme";
+        s.diagramColors = v === "light" || v === "auto" ? v : "theme";
         await this.plugin.saveSettings();
         this.plugin.redrawDiagrams();
       }));

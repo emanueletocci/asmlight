@@ -4,9 +4,12 @@
  * The diagrams are drawn as inline SVG instead of HTML + stylesheet so they keep their
  * look wherever the rendered note ends up: Obsidian, its native PDF export, and third-party
  * exporters that print the note in a separate window without the plugin's styles.css.
- * Everything visual is therefore an attribute of the SVG itself. Colors use Obsidian's
- * theme variables (light/dark aware inside Obsidian) with a fixed fallback, which is what
- * an exporter window without Obsidian's CSS ends up using.
+ *
+ * Colors: every element is painted with a diagram-local CSS variable (`--asmlight-c-text`, …).
+ * A <style> inside the SVG defines those variables on the diagram's container, for the chosen
+ * color mode. Exporters keep <style> elements that live inside an <svg> (that is how Mermaid
+ * survives them too), and a <style> inside an inline SVG applies to the whole page, so the same
+ * rules also restyle the HTML around the drawing, such as the register legend.
  */
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
@@ -25,9 +28,9 @@ export interface Palette {
   setFill: string;
   hatch: string;
   hatchBg: string;
-  /** Card behind the whole drawing; only the fixed palette needs one. */
-  background?: string;
 }
+
+const KEYS: Array<keyof Palette> = ["text", "muted", "faint", "line", "fill", "accent", "setFill", "hatch", "hatchBg"];
 
 /** Fixed light colors: readable on paper and on any page, whatever the Obsidian theme. */
 export const LIGHT: Palette = {
@@ -40,7 +43,6 @@ export const LIGHT: Palette = {
   setFill: "rgba(9, 105, 218, 0.14)",
   hatch: "#d0d7de",
   hatchBg: "#ffffff",
-  background: "#ffffff",
 };
 
 /** Theme colors, with the light palette as fallback where Obsidian's CSS variables don't exist. */
@@ -56,14 +58,37 @@ export const THEME: Palette = {
   hatchBg: `var(--background-primary, ${LIGHT.hatchBg})`,
 };
 
-export type DiagramColors = "theme" | "light";
+/** What the drawing code paints with: the diagram-local variables. */
+export const VARS: Palette = Object.fromEntries(KEYS.map((k) => [k, `var(--asmlight-c-${k})`])) as unknown as Palette;
+
+/**
+ * "theme": follow Obsidian's theme. "light": always the light palette, on a white card.
+ * "auto": follow the theme on screen, switch to the light card when printed or exported to PDF.
+ */
+export type DiagramColors = "theme" | "light" | "auto";
 
 export interface DiagramOptions {
-  /** "theme" follows Obsidian's theme; "light" always uses the light palette (print-friendly). */
   colors?: DiagramColors;
 }
 
-export const paletteFor = (o: DiagramOptions = {}): Palette => (o.colors === "light" ? LIGHT : THEME);
+export const colorMode = (o: DiagramOptions = {}): DiagramColors => (o.colors === "light" || o.colors === "auto" ? o.colors : "theme");
+
+const declarations = (p: Palette) => KEYS.map((k) => `--asmlight-c-${k}: ${p[k]};`).join(" ");
+
+/** The light card: white background, and dark text for the HTML parts (legend) as well. */
+const card = (s: string) =>
+  `${s} { ${declarations(LIGHT)} background: #ffffff; color: ${LIGHT.text}; padding: 8px 10px; border-radius: 6px; } ` +
+  `${s} .asmlight-regmap-legend th, ${s} .asmlight-regmap-legend tr.is-reserved, ${s} .asmlight-regmap-enums { color: ${LIGHT.muted}; } ` +
+  `${s} .asmlight-regmap-legend th, ${s} .asmlight-regmap-legend td, ${s} .asmlight-regmap-legend tr { background: transparent; border-color: ${LIGHT.hatch}; } ` +
+  `${s} .asmlight-regmap-legend code { color: ${LIGHT.text}; background: ${LIGHT.fill}; }`;
+
+/** CSS for one diagram, scoped to the class `scope` on its container. */
+export function colorCss(mode: DiagramColors, scope: string): string {
+  const s = `.${scope}`;
+  if (mode === "light") return card(s);
+  const theme = `${s} { ${declarations(THEME)} }`;
+  return mode === "auto" ? `${theme} @media print { ${card(s)} }` : theme;
+}
 
 type Attrs = Record<string, string | number>;
 
@@ -107,7 +132,7 @@ export interface TextOpts {
 }
 
 export function text(parent: Element, x: number, y: number, s: string, size: number, o: TextOpts = {}): SVGTextElement {
-  const attrs: Attrs = { x, y, "font-size": size, style: `fill: ${o.fill ?? "currentColor"}` };
+  const attrs: Attrs = { x, y, "font-size": size, style: `fill: ${o.fill ?? VARS.text}` };
   if (o.bold) attrs["font-weight"] = "bold";
   if (o.anchor) attrs["text-anchor"] = o.anchor;
   if (o.vertical) attrs.transform = `rotate(-90 ${fmt(x)} ${fmt(y)})`;
@@ -123,7 +148,7 @@ export interface BoxOpts {
 }
 
 export function box(parent: Element, x: number, y: number, w: number, h: number, fill: string, o: BoxOpts = {}): SVGRectElement {
-  let style = `fill: ${fill}; stroke: ${o.stroke ?? "currentColor"}; stroke-width: 1`;
+  let style = `fill: ${fill}; stroke: ${o.stroke ?? VARS.line}; stroke-width: 1`;
   if (o.dashed) style += "; stroke-dasharray: 4 3";
   const attrs: Attrs = { x, y, width: w, height: h, style };
   if (o.rx) attrs.rx = o.rx;
@@ -131,32 +156,47 @@ export function box(parent: Element, x: number, y: number, w: number, h: number,
   return svgEl(parent, "rect", attrs);
 }
 
+export function line(parent: Element, x1: number, y1: number, x2: number, y2: number, stroke: string, width = 1): SVGLineElement {
+  return svgEl(parent, "line", { x1, y1, x2, y2, style: `stroke: ${stroke}; stroke-width: ${width}` });
+}
+
 /** Adds a native tooltip to an SVG element. */
 export function tooltip(target: Element, s: string): void {
   svgEl(target, "title", {}, s);
 }
 
-let patternCount = 0;
+let diagramCount = 0;
 
 export interface Canvas {
   svg: SVGSVGElement;
+  /** Colors to paint with (diagram-local CSS variables). */
   pal: Palette;
   /** `url(#…)` of this SVG's hatch pattern, for reserved fields, gaps and holes. */
   hatch: string;
 }
 
-/** Starts an SVG inside `container`; call `finish` once the drawing size is known. */
-export function startSvg(container: HTMLElement, cls: string, pal: Palette): Canvas {
+/**
+ * Starts an SVG inside `container`; call `finish` once the drawing size is known.
+ * `scope` is the element the color variables are defined on: the diagram's own container,
+ * so that the light card can also cover the HTML next to the drawing (the register legend).
+ */
+export function startSvg(container: HTMLElement, cls: string, opts: { scope: HTMLElement; label: string; colors?: DiagramColors }): Canvas {
+  const n = ++diagramCount;
+  const scope = `asmlight-scope-${n}`;
+  opts.scope.classList.add(scope);
   const svg = svgEl(container, "svg", {
     class: cls,
+    role: "img",
+    "aria-label": opts.label,
     "font-family": FONT,
     style: "display: block; max-width: 100%; height: auto; overflow: visible",
   });
-  const id = `asmlight-hatch-${++patternCount}`;
+  svgEl(svg, "style", {}, colorCss(opts.colors ?? "theme", scope));
+  const id = `asmlight-hatch-${n}`;
   const pattern = svgEl(svgEl(svg, "defs"), "pattern", { id, width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" });
-  svgEl(pattern, "rect", { width: 6, height: 6, style: `fill: ${pal.hatchBg}` });
-  svgEl(pattern, "line", { x1: 0, y1: 0, x2: 0, y2: 6, style: `stroke: ${pal.hatch}; stroke-width: 2` });
-  return { svg, pal, hatch: `url(#${id})` };
+  svgEl(pattern, "rect", { width: 6, height: 6, style: `fill: ${VARS.hatchBg}` });
+  svgEl(pattern, "line", { x1: 0, y1: 0, x2: 0, y2: 6, style: `stroke: ${VARS.hatch}; stroke-width: 2` });
+  return { svg, pal: VARS, hatch: `url(#${id})` };
 }
 
 export function finish(c: Canvas, width: number, height: number): void {
@@ -164,9 +204,4 @@ export function finish(c: Canvas, width: number, height: number): void {
   c.svg.setAttribute("width", String(w));
   c.svg.setAttribute("height", String(h));
   c.svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-  if (c.pal.background) {
-    // Card behind the drawing, so fixed dark text stays readable on a dark page.
-    const card = svgEl(c.svg, "rect", { class: "asmlight-diagram-bg", width: w, height: h, rx: 4, style: `fill: ${c.pal.background}` });
-    c.svg.insertBefore(card, c.svg.firstChild?.nextSibling ?? null);   // right after <defs>
-  }
 }

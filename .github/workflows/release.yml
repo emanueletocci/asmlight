@@ -1,0 +1,52 @@
+# Builds the plugin and publishes a GitHub release with the three files Obsidian needs.
+#
+# To release: set the same version in manifest.json (and versions.json / package.json),
+# commit, then push a tag with exactly that version, without a "v" prefix:
+#   git tag 0.6.0 && git push origin 0.6.0
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write     # create the release and upload its files
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check that the tag matches manifest.json
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match manifest.json version $version"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - name: Collect the plugin files
+        run: |
+          # main.js is built either into build/ or into the repository root
+          dir=.; [ -f build/main.js ] && dir=build
+          mkdir -p dist
+          cp "$dir/main.js" dist/
+          cp manifest.json styles.css dist/
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/main.js dist/manifest.json dist/styles.css \
+            --title "$GITHUB_REF_NAME" --generate-notes
