@@ -79,19 +79,25 @@ describe("values", () => {
 });
 
 describe("renderRegmap", () => {
-  it("draws bit numbers, fields, bit values and a legend with decoded enums", () => {
+  it("draws an SVG with bit numbers, fields and bit values, plus a legend with decoded enums", () => {
     const el = document.createElement("div");
     renderRegmap(MSTATUS, el);
-    expect(el.querySelector(".asmlight-regmap-title")!.textContent).toBe("mstatus32-bit= 0x00001888Machine status");
-    const bitnos = Array.from(el.querySelectorAll(".asmlight-regmap-bitno")).map((n) => n.textContent);
+    const svg = el.querySelector("svg.asmlight-regmap-svg")!;
+    expect(svg).not.toBeNull();
+    const t = (cls: string) => svg.querySelector(cls)!.textContent;
+    expect([t(".asmlight-regmap-name"), t(".asmlight-regmap-width"), t(".asmlight-regmap-value"), t(".asmlight-regmap-caption")]).toEqual([
+      "mstatus", "32-bit", "= 0x00001888", "Machine status",
+    ]);
+    const bitnos = Array.from(svg.querySelectorAll(".asmlight-regmap-bitno")).map((n) => n.textContent);
     expect(bitnos[0]).toBe("31");
     expect(bitnos[31]).toBe("0");
-    const fields = Array.from(el.querySelectorAll<HTMLElement>(".asmlight-regmap-field"));
-    expect(fields.map((f) => [f.textContent, f.style.getPropertyValue("--asmlight-span")])).toEqual([
+    const fields = Array.from(svg.querySelectorAll(".asmlight-regmap-field"));
+    expect(fields.map((f) => [f.querySelector(".asmlight-regmap-label")?.textContent ?? "", f.getAttribute("data-span")])).toEqual([
       ["", "19"], ["MPP", "2"], ["", "3"], ["MPIE", "1"], ["", "3"], ["MIE", "1"], ["", "3"],
     ]);
     expect(fields[3].querySelector(".is-vertical")).not.toBeNull();
-    expect(el.querySelectorAll(".asmlight-regmap-bit.is-set")).toHaveLength(4);
+    expect(fields[1].querySelector("title")!.textContent).toBe("MPP [12:11] Previous privilege");
+    expect(svg.querySelectorAll(".asmlight-regmap-bit.is-set")).toHaveLength(4);
     const rows = Array.from(el.querySelectorAll("tbody tr")).map((tr) => Array.from(tr.children).map((c) => c.textContent));
     expect(rows[0]).toEqual(["12:11", "MPP", "0b11 (3) → M", "Previous privilege0 = U, 1 = S, 3 = M"]);
   });

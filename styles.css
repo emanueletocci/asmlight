@@ -91,118 +91,28 @@
   color: var(--text-muted);
 }
 
-/* regmap */
+/* regmap
+ * The bit grid is an inline SVG that carries its own colors (theme variables with
+ * fallbacks), so it survives exporters that don't load this stylesheet. Only the
+ * HTML parts around it are styled here. */
 
 .asmlight-regmap {
-  --asmlight-bit-width: 1.5em;
   margin: 0.5em 0 1em;
+  overflow-x: auto;
 }
 
 .asmlight-regmap-reg {
   margin: 0 0 1.25em;
 }
 
-.asmlight-regmap-title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.6em;
+.asmlight-regmap-svg {
   margin-bottom: 0.4em;
-}
-
-.asmlight-regmap-title .asmlight-regmap-name {
-  font-weight: var(--font-semibold, 600);
-  font-size: 1.05em;
-}
-
-.asmlight-regmap-width,
-.asmlight-regmap-caption {
-  color: var(--text-muted);
-  font-size: var(--font-ui-small, 13px);
 }
 
 .asmlight-regmap-errors {
   margin: 0 0 0.5em;
   color: var(--text-error);
   font-size: var(--font-ui-small, 13px);
-}
-
-.asmlight-regmap-scroll {
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.asmlight-regmap-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--asmlight-bits, 32), minmax(var(--asmlight-bit-width), 1fr));
-  min-width: max-content;
-  margin-bottom: 0.6em;
-  padding-left: 1px;           /* room for the first field's -1px overlap */
-  font-family: var(--font-monospace);
-  font-size: 0.85em;
-}
-
-.asmlight-regmap-bitno {
-  grid-row: 1;
-  text-align: center;
-  font-size: 0.68em;
-  color: var(--text-faint);
-  padding-bottom: 2px;
-}
-
-.asmlight-regmap-field {
-  grid-row: 2;
-  grid-column: span var(--asmlight-span, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.4em;
-  padding: 3px 1px;
-  border: 1px solid var(--background-modifier-border-hover, var(--background-modifier-border));
-  margin-left: -1px;
-  background: var(--background-secondary);
-  overflow: hidden;
-}
-
-.asmlight-regmap-field.is-gap,
-.asmlight-regmap-field.is-reserved {
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--background-primary) 0 4px,
-    var(--background-modifier-border) 4px 5px
-  );
-}
-
-.asmlight-regmap-label {
-  font-size: 0.78em;
-  font-weight: var(--font-semibold, 600);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.asmlight-regmap-field.is-reserved .asmlight-regmap-label {
-  color: var(--text-muted);
-  font-weight: normal;
-}
-
-.asmlight-regmap-label.is-vertical {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  max-height: 8em;
-}
-
-.asmlight-regmap-bit {
-  grid-row: 3;
-  text-align: center;
-  font-size: 0.75em;
-  color: var(--text-faint);
-  padding-top: 2px;
-}
-
-.asmlight-regmap-bit.is-set {
-  color: var(--text-accent);
-  font-weight: var(--font-semibold, 600);
 }
 
 .asmlight-regmap-legend {
@@ -244,147 +154,17 @@
   font-style: italic;
 }
 
-/* memmap */
+/* memmap: drawn as an inline SVG, see the regmap note above. */
 
 .asmlight-memmap {
   margin: 0.5em 0 1em;
-  font-size: var(--font-ui-small, 13px);
   overflow-x: auto;
-}
-
-.asmlight-memmap-title {
-  font-weight: var(--font-semibold, 600);
-  margin-bottom: 0.4em;
 }
 
 .asmlight-memmap-errors {
   margin: 0 0 0.5em;
   color: var(--text-error);
-}
-
-.asmlight-memmap-list {
-  display: flex;
-  flex-direction: column;
-  min-width: max-content;
-}
-
-.asmlight-memmap-row {
-  display: grid;
-  grid-template-columns: auto minmax(14em, 1fr);
-  gap: 0 0.6em;
-}
-
-.asmlight-memmap-addrs {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-end;
-  font-family: var(--font-monospace);
-  font-size: 0.85em;
-  color: var(--text-muted);
-  white-space: nowrap;
-  width: 11ch;                   /* 0x0000_0000 */
-}
-
-.asmlight-memmap.is-64bit .asmlight-memmap-addrs {
-  width: 21ch;                   /* 0x0000_0000_0000_0000 */
-}
-
-.asmlight-memmap-addrs code {
-  background: none;
-  padding: 0;
-  color: inherit;
-}
-
-.asmlight-memmap-box {
-  border: 1px solid var(--background-modifier-border-hover, var(--background-modifier-border));
-  background: var(--background-secondary);
-  padding: 0.35em 0.6em;
-  min-height: var(--asmlight-log-height, 2.2em);
-  margin-top: -1px;              /* contiguous regions share an edge */
-}
-
-.asmlight-memmap-row.is-entry .asmlight-memmap-box {
-  min-height: var(--asmlight-log-height, 0);
-  padding: 0.15em 0.6em;
-}
-
-.asmlight-memmap-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25em 0.7em;
-}
-
-.asmlight-memmap-name {
-  font-family: var(--font-monospace);
-  font-weight: var(--font-semibold, 600);
-}
-
-.asmlight-memmap-index,
-.asmlight-memmap-offset {
-  font-family: var(--font-monospace);
-  color: var(--text-muted);
-}
-
-.asmlight-memmap-size {
-  margin-left: auto;
-  color: var(--text-muted);
-}
-
-.asmlight-memmap-attrs {
-  font-family: var(--font-monospace);
-  font-size: 0.9em;
-  padding: 0 0.4em;
-  border-radius: var(--radius-s, 4px);
-  background: var(--background-modifier-hover, var(--background-primary));
-}
-
-.asmlight-memmap-desc {
-  color: var(--text-muted);
-}
-
-/* nested regions sit inside their parent's box */
-.asmlight-memmap-box > .asmlight-memmap-list {
-  margin-top: 0.4em;
-}
-
-.asmlight-memmap-box .asmlight-memmap-box {
-  background: var(--background-primary);
-}
-
-.asmlight-memmap-gap {
-  margin: 0.15em 0;
-  padding: 0.1em 0.6em;
-  color: var(--text-faint);
-  font-style: italic;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent 0 4px,
-    var(--background-modifier-border) 4px 5px
-  );
-  border-left: 1px dashed var(--background-modifier-border-hover, var(--background-modifier-border));
-  border-right: 1px dashed var(--background-modifier-border-hover, var(--background-modifier-border));
-}
-
-.asmlight-memmap-row.is-marker .asmlight-memmap-addrs {
-  color: var(--text-accent);
-}
-
-.asmlight-memmap-marker {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5em;
-  padding: 0.1em 0;
-  color: var(--text-accent);
-}
-
-.asmlight-memmap-arrow {
-  font-size: 0.8em;
-}
-
-.asmlight-memmap-marker .asmlight-memmap-desc {
-  color: var(--text-muted);
+  font-size: var(--font-ui-small, 13px);
 }
 
 .asmlight-memmap-empty {

@@ -233,7 +233,11 @@ Token colors come from your theme's code colors. To change one, add a CSS snippe
 - **Kinds:** `comment`, `label`, `mnemonic`, `directive`, `register`, `number`, `string`, `reloc`, `keyword`, `function`, `variable`, `operator`, `property`.
 - **Per-language rules:** tokens also have an `asmlight-lang-<id>` class (`riscv`, `arm32`, `arm64`, `makefile`, `linker`, `dts`, `objdump`, `verilog`, `vhdl`, `xdc`, `sdc`, `pcf`, `qsf`). Instructions inside a disassembly block carry their instruction set's id.
 - **Hover cards:** use `.asmlight-hover`.
-- **Diagrams:** register diagrams use `.asmlight-regmap`; set `--asmlight-bit-width` on it to make bit columns wider or narrower. Memory maps use `.asmlight-memmap`.
+- **Diagrams:** register diagrams and memory maps are drawn as inline SVG (`svg.asmlight-regmap-svg`, `svg.asmlight-memmap-svg`). Their colors come from your theme (`--text-normal`, `--text-muted`, `--text-faint`, `--text-accent`, `--background-secondary`, `--background-primary`, `--background-modifier-border`), so changing those variables recolors them. Text elements keep classes such as `.asmlight-regmap-label` or `.asmlight-memmap-name` for finer tweaks. The register legend is a normal table (`.asmlight-regmap-legend`).
+
+## Exporting
+
+Register diagrams and memory maps are inline SVG with their colors and layout written into the drawing itself, so they keep their look in Obsidian's own PDF export and in third-party exporters that print the note without loading plugin stylesheets (for example Advanced PDF Export). Outside Obsidian, where the theme variables don't exist, they fall back to a light color scheme.
 
 ## Known limitations
 

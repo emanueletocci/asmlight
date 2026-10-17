@@ -111,20 +111,33 @@ describe("layout", () => {
 });
 
 describe("renderMemmap", () => {
-  it("high addresses on top by default, nested boxes with offsets, markers and gaps", () => {
+  it("draws an SVG: high addresses on top by default, nested boxes with offsets, markers and gaps", () => {
     const el = document.createElement("div");
     renderMemmap(STM32, el);
-    const top = Array.from(el.querySelectorAll(".asmlight-memmap > .asmlight-memmap-list > .asmlight-memmap-row"));
+    const svg = el.querySelector(".asmlight-memmap > svg.asmlight-memmap-svg")!;
+    expect(svg).not.toBeNull();
+    expect(svg.querySelector(".asmlight-memmap-title")!.textContent).toBe("STM32F407 (subset)");
+    const top = Array.from(svg.children).filter((c) => c.classList.contains("asmlight-memmap-row"));
     expect(top.map((r) => r.querySelector(".asmlight-memmap-name, .asmlight-memmap-gap")!.textContent)).toEqual([
       "SCS", "⋮ 2.5 GiB unused", "APB1", "⋮ 511.87 MiB unused", "SRAM", "⋮ 383.5 MiB unused", "FLASH",
     ]);
-    expect(Array.from(top[0].querySelectorAll(".asmlight-memmap-addrs code")).map((c) => c.textContent)).toEqual(["0xE000_EFFF", "0xE000_E000"]);
-    const usart2 = Array.from(el.querySelectorAll(".asmlight-memmap-row")).find((r) => r.querySelector(".asmlight-memmap-name")?.textContent === "USART2")!;
+    const addrs = (row: Element) => Array.from(row.children).filter((c) => c.classList.contains("asmlight-memmap-addr")).map((c) => c.textContent);
+    expect(addrs(top[0])).toEqual(["0xE000_EFFF", "0xE000_E000"]);
+    // children are drawn inside their parent's group
+    const apb1 = top[2];
+    const usart2 = Array.from(apb1.querySelectorAll(".asmlight-memmap-row")).find((r) => r.querySelector(".asmlight-memmap-name")?.textContent === "USART2")!;
     expect(usart2.querySelector(".asmlight-memmap-offset")!.textContent).toBe("+0x4400");
     expect(usart2.querySelector(".asmlight-memmap-size")!.textContent).toBe("1 KiB");
-    expect((usart2.querySelector(".asmlight-memmap-box") as HTMLElement).title).toBe("USART2: 0x4000_4400 – 0x4000_47FF (1 KiB)");
-    expect(el.querySelector(".asmlight-memmap-marker")!.textContent).toBe("◀_estack");
-    expect(el.querySelector(".asmlight-memmap-attrs")!.textContent).toBe("rwx");
+    // hover tooltip: a <title> on the row itself, so it shows over the box, the name and the description
+    const ownTitle = (row: Element) => Array.from(row.children).find((c) => c.tagName.toLowerCase() === "title")?.textContent;
+    expect(ownTitle(usart2)).toBe("USART2: 0x4000_4400 – 0x4000_47FF (1 KiB)");
+    expect(ownTitle(apb1)).toBe("APB1: 0x4000_0000 – 0x4000_7FFF (32 KiB)");
+    const gap = top.find((r) => r.classList.contains("is-gap"))!;
+    expect(ownTitle(gap)).toMatch(/^0x[0-9A-F_]+ – 0x[0-9A-F_]+$/);
+    expect(svg.querySelector(".asmlight-memmap-marker")!.textContent).toBe("◀ _estack");
+    expect(svg.querySelector(".asmlight-memmap-attrs")!.textContent).toBe("rwx");
+    expect(Number(svg.getAttribute("width"))).toBeGreaterThan(0);
+    expect(svg.getAttribute("viewBox")).toMatch(/^0 0 \d+ \d+$/);
   });
 
   it("order: down puts low addresses first; scale: log sizes leaf boxes", () => {
@@ -132,8 +145,15 @@ describe("renderMemmap", () => {
     renderMemmap("order: down\nscale: log\n0x0 1K A\n0x10000 1M B", el);
     const names = Array.from(el.querySelectorAll(".asmlight-memmap-name")).map((n) => n.textContent);
     expect(names).toEqual(["A", "B"]);
-    const boxes = Array.from(el.querySelectorAll<HTMLElement>(".asmlight-memmap-box"));
-    expect(boxes.map((b) => b.style.getPropertyValue("--asmlight-log-height"))).toEqual(["2.20em", "5.70em"]);
+    const heights = Array.from(el.querySelectorAll(".asmlight-memmap-box")).map((b) => Number(b.getAttribute("height")));
+    expect(heights[1]).toBeGreaterThan(heights[0]);
+  });
+
+  it("uses theme colors with fallbacks, so exporters without Obsidian's CSS still draw it", () => {
+    const el = document.createElement("div");
+    renderMemmap("0x0 1K A", el);
+    const style = el.querySelector(".asmlight-memmap-box")!.getAttribute("style")!;
+    expect(style).toMatch(/var\(--[\w-]+, #[0-9a-f]+\)/);
   });
 
   it("errors, empty hint, and no markup injection", () => {
