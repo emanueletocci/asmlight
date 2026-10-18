@@ -89,6 +89,7 @@ describe("lossless round-trip", () => {
     sdc: "set p ${x}; create_clock -period $p [get_ports clk\nset_false_path -from [",
     pcf: "set_io -nowarn clk 35 # ü\nset_frequency clk 12.5",
     qsf: "set_global_assignment -name FAMILY \"Cyclone V\"\nset_location_assignment PIN_A1 -to x[0] # é",
+    linkmap: "Memory Configuration\n\nName Origin Length\nFLASH 0x0 0x400 xr\n\nLinker script and memory map\n\n.text 0x0 0xa0 ü\n *(.text*\n .text 0x0 0x64 b/s.o\n                0x48 Reset_Handler = (ORIGIN (RAM\n *fill* 0x9 é",
     dts: "/dts-v1/;\n/ { ü: n@1 { reg = <0x0\n 1>; s = \"oops\n}; /* c\n */ };\nb = [00 1",
   };
   for (const lang of ALL_LANGUAGES) {

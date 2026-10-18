@@ -2,7 +2,7 @@
 
 An Obsidian plugin for low-level and embedded-systems notes. It adds:
 
-- **Syntax highlighting** for RISC-V, ARM (AArch32/Thumb and AArch64) assembly, Makefiles, GNU ld linker scripts, Devicetree source, Verilog/SystemVerilog, VHDL and FPGA constraint files (XDC, SDC, PCF, QSF).
+- **Syntax highlighting** for RISC-V, ARM (AArch32/Thumb and AArch64) assembly, Makefiles, GNU ld linker scripts and map files, Devicetree source, Verilog/SystemVerilog, VHDL and FPGA constraint files (XDC, SDC, PCF, QSF).
 - **Hover cards** that explain the instruction, register, CSR or keyword under your mouse.
 - **Disassembly highlighting** for pasted `objdump -d` and GDB `disassemble` output, with the same colors and hover cards as assembly.
 - **Register diagrams** that turn a short plain-text description into a bitfield drawing, and can decode a value for you.
@@ -68,6 +68,7 @@ Use one of these tags after the opening ```` ``` ````. Tags are case-insensitive
 | ARM AArch64 | `arm64` `aarch64` `a64` | ARMv8-A, FP/SIMD, LSE atomics, EL1–EL3 system registers, GICv3 CPU interface |
 | Makefile | `makefile` `make` `mk` `mak` | GNU Make: rules, recipes, variables, functions, conditionals, `define` blocks |
 | Linker script | `linker` `ld` `lds` `linkerscript` `linker-script` | GNU ld: `MEMORY`, `SECTIONS`, region placement, symbol assignments |
+| Linker map file         | `linkmap` `map` `mapfile` `ldmap` `link-map`                                       | GNU ld `-Map` output: headings, memory regions, output and input sections, object files, symbol addresses, `*fill*`, `load address`, discarded sections |
 | Devicetree | `dts` `dtsi` `devicetree` `device-tree` | Nodes, labels, `&references`, properties, cells, `dt-bindings` macros, `/…/` directives |
 | Verilog / SystemVerilog | `verilog` `systemverilog` `system-verilog` `v` `vh` `sv` `svh` | Modules, ports, sized literals (`8'hFF`, `'0`), `` `define ``/`` `ifdef `` directives, `$display`-style system tasks, `(* attributes *)`, named port connections, SystemVerilog types, interfaces and assertions |
 | VHDL | `vhdl` `vhd` | Entities, architectures, labels, `std_logic`/`numeric_std` types and functions, `'event`-style attributes, bit strings (`x"FF"`, `16#FF#`) |
@@ -98,6 +99,30 @@ firmware.elf:     file format elf32-littleriscv
 - **Instructions** are highlighted by the RISC-V, ARM or AArch64 highlighter, so hover cards work on them too.
 - **Picking the instruction set:** the `file format …` header line decides (`elf32-littleriscv`, `elf32-littlearm`, `elf64-littleaarch64`). Without a header, the first instruction that only one ISA has (`addi`, `push`, `stp`, …) decides. To force one, use `objdump-riscv`, `objdump-arm` or `objdump-arm64`.
 - **Other lines,** such as interleaved C source from `objdump -S`, are left uncolored.
+
+## Linker map files
+
+Paste the map file the linker writes with `-Map=output.map` into a `linkmap` block:
+
+````markdown
+```linkmap
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x00000000         0x00400000         xr
+RAM              0x20000000         0x00400000         xrw
+
+Linker script and memory map
+
+.text           0x00000040       0xa0
+ .text          0x00000040       0x64 build/boot/startup.o
+                0x00000048                Reset_Handler
+ .rodata        0x000000d0        0xe build/src/main.o
+```
+````
+
+- **What's highlighted:** the headings (`Memory Configuration`, `Linker script and memory map`, `Discarded input sections`, …), memory regions and their attributes, **output sections** (column 0) and the **input sections** inside them (indented), object files and archives, symbols with their final addresses, `*fill*` padding, `load address` (the LMA) and the linker-script lines ld copies into the map, such as `*(.text*)` or `. = ALIGN (0x4)`.
+- **Hover cards** explain each part: what a heading lists, the difference between an output section and an input section, what common sections (`.isr_vector`, `.data`, `.bss`, `COMMON`, `.debug_*`, …) and startup symbols (`_sidata`, `_sdata`, `_estack`, …) are for. Linker-script commands and functions reuse the linker-script cards, and addresses get the usual number card.
 
 ## Hover cards
 
