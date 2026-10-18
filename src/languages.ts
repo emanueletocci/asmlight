@@ -2,6 +2,7 @@ import { ALL_ISAS } from "./isa";
 import { CONSTRAINT_LANGUAGES } from "./lang/constraints";
 import { DEVICETREE } from "./lang/devicetree";
 import { LINKER } from "./lang/linker";
+import { LINKMAP } from "./lang/linkmap";
 import { MAKEFILE } from "./lang/makefile";
 import { OBJDUMP_LANGUAGES } from "./lang/objdump";
 import { VERILOG } from "./lang/verilog";
@@ -10,7 +11,7 @@ import { asmLanguage } from "./tokenizer/parser";
 import type { Language } from "./tokenizer/types";
 
 export const ALL_LANGUAGES: readonly Language[] = [
-  ...ALL_ISAS.map(asmLanguage), MAKEFILE, LINKER, DEVICETREE, ...OBJDUMP_LANGUAGES,
+  ...ALL_ISAS.map(asmLanguage), MAKEFILE, LINKER, LINKMAP, DEVICETREE, ...OBJDUMP_LANGUAGES,
   VERILOG, VHDL, ...CONSTRAINT_LANGUAGES,
 ];
 

@@ -2,7 +2,7 @@
 
 An Obsidian plugin for low-level and embedded-systems notes. It adds:
 
-- **Syntax highlighting** for RISC-V, ARM (AArch32/Thumb and AArch64) assembly, Makefiles, GNU ld linker scripts, Devicetree source, Verilog/SystemVerilog, VHDL and FPGA constraint files (XDC, SDC, PCF, QSF).
+- **Syntax highlighting** for RISC-V, ARM (AArch32/Thumb and AArch64) assembly, Makefiles, GNU ld linker scripts and map files, Devicetree source, Verilog/SystemVerilog, VHDL and FPGA constraint files (XDC, SDC, PCF, QSF).
 - **Hover cards** that explain the instruction, register, CSR or keyword under your mouse.
 - **Disassembly highlighting** for pasted `objdump -d` and GDB `disassemble` output, with the same colors and hover cards as assembly.
 - **Register diagrams** that turn a short plain-text description into a bitfield drawing, and can decode a value for you.
@@ -25,7 +25,7 @@ It works in Reading view, Live Preview and Source mode, on desktop and mobile, a
 
 ## Install
 
-Asmlight isn't in the community plugin list yet, so install it by hand:
+Asmlight isn't in the community plugin list yet, so install it by hand. The quickest way is a release: download `main.js`, `manifest.json` and `styles.css` from the [Releases](https://github.com/mecilh/asmlight/releases) page and do steps 2–4 below. To build it yourself instead:
 
 1. Build it: `git clone https://github.com/mecilh/asmlight && cd asmlight && npm install && npm run build`
 2. Create the folder `<your vault>/.obsidian/plugins/asmlight/`.
@@ -68,6 +68,7 @@ Use one of these tags after the opening ```` ``` ````. Tags are case-insensitive
 | ARM AArch64 | `arm64` `aarch64` `a64` | ARMv8-A, FP/SIMD, LSE atomics, EL1–EL3 system registers, GICv3 CPU interface |
 | Makefile | `makefile` `make` `mk` `mak` | GNU Make: rules, recipes, variables, functions, conditionals, `define` blocks |
 | Linker script | `linker` `ld` `lds` `linkerscript` `linker-script` | GNU ld: `MEMORY`, `SECTIONS`, region placement, symbol assignments |
+| Linker map file         | `linkmap` `map` `mapfile` `ldmap` `link-map`                                       | GNU ld `-Map` output: headings, memory regions, output and input sections, object files, symbol addresses, `*fill*`, `load address`, discarded sections |
 | Devicetree | `dts` `dtsi` `devicetree` `device-tree` | Nodes, labels, `&references`, properties, cells, `dt-bindings` macros, `/…/` directives |
 | Verilog / SystemVerilog | `verilog` `systemverilog` `system-verilog` `v` `vh` `sv` `svh` | Modules, ports, sized literals (`8'hFF`, `'0`), `` `define ``/`` `ifdef `` directives, `$display`-style system tasks, `(* attributes *)`, named port connections, SystemVerilog types, interfaces and assertions |
 | VHDL | `vhdl` `vhd` | Entities, architectures, labels, `std_logic`/`numeric_std` types and functions, `'event`-style attributes, bit strings (`x"FF"`, `16#FF#`) |
@@ -99,6 +100,30 @@ firmware.elf:     file format elf32-littleriscv
 - **Picking the instruction set:** the `file format …` header line decides (`elf32-littleriscv`, `elf32-littlearm`, `elf64-littleaarch64`). Without a header, the first instruction that only one ISA has (`addi`, `push`, `stp`, …) decides. To force one, use `objdump-riscv`, `objdump-arm` or `objdump-arm64`.
 - **Other lines,** such as interleaved C source from `objdump -S`, are left uncolored.
 
+## Linker map files
+
+Paste the map file the linker writes with `-Map=output.map` into a `linkmap` block:
+
+````markdown
+```linkmap
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x00000000         0x00400000         xr
+RAM              0x20000000         0x00400000         xrw
+
+Linker script and memory map
+
+.text           0x00000040       0xa0
+ .text          0x00000040       0x64 build/boot/startup.o
+                0x00000048                Reset_Handler
+ .rodata        0x000000d0        0xe build/src/main.o
+```
+````
+
+- **What's highlighted:** the headings (`Memory Configuration`, `Linker script and memory map`, `Discarded input sections`, …), memory regions and their attributes, **output sections** (column 0) and the **input sections** inside them (indented), object files and archives, symbols with their final addresses, `*fill*` padding, `load address` (the LMA) and the linker-script lines ld copies into the map, such as `*(.text*)` or `. = ALIGN (0x4)`.
+- **Hover cards** explain each part: what a heading lists, the difference between an output section and an input section, what common sections (`.isr_vector`, `.data`, `.bss`, `COMMON`, `.debug_*`, …) and startup symbols (`_sidata`, `_sdata`, `_estack`, …) are for. Linker-script commands and functions reuse the linker-script cards, and addresses get the usual number card.
+
 ## Hover cards
 
 Hover over any highlighted word to see a short explanation. Some examples:
@@ -127,6 +152,7 @@ Options are under **Settings → Asmlight**:
 - **Hover cards:** turn the cards on or off.
 - **Require Ctrl/Cmd:** only show a card while Ctrl (Cmd on macOS) is held, like Obsidian's page preview.
 - **Hover delay:** how long to wait before a card appears.
+- **Diagram colors:** *Follow theme* draws register diagrams and memory maps with your theme's colors; *Always light (print-friendly)* draws them with fixed light colors on a white card; *Auto* follows the theme on screen and switches to the light card when the note is printed or exported to PDF. The light card also covers the register legend.
 
 On mobile, tap a highlighted word in Reading view to show its card.
 
@@ -168,7 +194,7 @@ Details:
 - **No header:** the width becomes the smallest of 8, 16, 32, 64 or 128 that fits the highest bit.
 - **Errors:** shown above the diagram. These cover overlapping fields, bits outside the register, values that don't fit, and lines that can't be read.
 
-A good use: paste a value from GDB (`p/x $mcause`) or a datasheet next to the register description, and read off the decoded fields.
+A good use: paste a value from GDB (`p/x $mcause`) or a datasheet next to the register description, and read off the decoded fields. With a value, fields of two or more bits also show their own value inside the box, and thin separators mark every hex digit (4 bits) in the bit-number and value rows.
 
 ## Memory maps
 
@@ -233,7 +259,15 @@ Token colors come from your theme's code colors. To change one, add a CSS snippe
 - **Kinds:** `comment`, `label`, `mnemonic`, `directive`, `register`, `number`, `string`, `reloc`, `keyword`, `function`, `variable`, `operator`, `property`.
 - **Per-language rules:** tokens also have an `asmlight-lang-<id>` class (`riscv`, `arm32`, `arm64`, `makefile`, `linker`, `dts`, `objdump`, `verilog`, `vhdl`, `xdc`, `sdc`, `pcf`, `qsf`). Instructions inside a disassembly block carry their instruction set's id.
 - **Hover cards:** use `.asmlight-hover`.
-- **Diagrams:** register diagrams use `.asmlight-regmap`; set `--asmlight-bit-width` on it to make bit columns wider or narrower. Memory maps use `.asmlight-memmap`.
+- **Diagrams:** register diagrams and memory maps are drawn as inline SVG (`svg.asmlight-regmap-svg`, `svg.asmlight-memmap-svg`). Their colors come from your theme (`--text-normal`, `--text-muted`, `--text-faint`, `--text-accent`, `--background-secondary`, `--background-primary`, `--background-modifier-border`), so changing those variables recolors them. Text elements keep classes such as `.asmlight-regmap-label` or `.asmlight-memmap-name` for finer tweaks. The register legend is a normal table (`.asmlight-regmap-legend`).
+
+## Exporting
+
+Register diagrams and memory maps are inline SVG with their colors and layout written into the drawing itself, so they keep their look in Obsidian's own PDF export and in third-party exporters that print the note without loading plugin stylesheets (for example Advanced PDF Export). Outside Obsidian, where the theme variables don't exist, they fall back to a light color scheme. If you write with a dark theme but export for printing, set **Diagram colors** to *Auto* (light only in the PDF) or *Always light*.
+
+Right-click a diagram to **copy it as SVG** or **save it as an .svg file** (in your attachment folder). The file uses plain light colors with no CSS variables, so it opens the same in a browser, Inkscape or a slide editor. Diagrams carry an `aria-label` that summarises them for screen readers.
+
+Releases are built by a GitHub Action: push a tag equal to the version in `manifest.json` (for example `git tag 0.6.0 && git push origin 0.6.0`) and it tests, builds and attaches `main.js`, `manifest.json` and `styles.css` to a new release.
 
 ## Known limitations
 
